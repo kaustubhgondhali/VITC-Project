@@ -1,0 +1,275 @@
+/* =======================================================================
+   VITC Teacher Admin — supplemental styles (PART 3/8 final UI/UX polish)
+   Loaded ONLY by teacher-login.html and teacher-admin/*.html, always
+   AFTER admin.css. This file never redefines admin.css's own selectors
+   for the Main Admin surfaces (admin/*.html don't link this file at all),
+   so Main Admin's look and the public site are completely unaffected.
+   It only adds Teacher-specific refinements on top of the shared design
+   system (same CSS variables / .btn / .card / .badge / .modal classes).
+   ======================================================================= */
+
+/* ---------- Sidebar: footer nav pinned to the bottom, mobile drawer ---------- */
+#teacherSidebar{ display:flex; flex-direction:column; }
+#teacherSidebar .nav-group:first-of-type{ flex:1 1 auto; }
+#teacherSidebar .nav-group:last-of-type{ flex:0 0 auto; padding-top:14px; border-top:1px solid var(--line); }
+
+/* Dimmed backdrop behind the mobile sidebar drawer: tapping it closes the menu
+   instead of leaving it stuck open over the page content (fixes "Navigation
+   overflow" on phones/tablets, where the drawer previously had no way to
+   dismiss except re-tapping the burger). */
+.sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(5,8,12,.55); z-index:45; }
+@media (max-width:900px){
+  .sidebar-backdrop.open{ display:block; }
+}
+
+/* ---------- Topbar: title + who-block no longer collide on narrow tablets/phones ---------- */
+@media (max-width:640px){
+  .topbar{ flex-wrap:wrap; row-gap:10px; padding:14px 16px; }
+  .topbar h1{ font-size:16px; }
+  .topbar .who{ width:100%; justify-content:flex-end; flex-wrap:wrap; row-gap:8px; }
+  .content{ padding:16px; }
+}
+
+/* ---------- Dashboard stat cards: colour-coded icons for quicker scanning ---------- */
+#stats .stat{ transition:transform .15s ease, border-color .15s ease; }
+#stats .stat:hover{ transform:translateY(-2px); border-color:var(--brand); }
+#stats .stat:nth-child(4n+1) .ico{ color:var(--ok); background:rgba(31,191,117,.14); }
+#stats .stat:nth-child(4n+2) .ico{ color:var(--info); background:rgba(59,161,255,.14); }
+#stats .stat:nth-child(4n+3) .ico{ color:var(--brand); background:rgba(245,165,36,.14); }
+#stats .stat:nth-child(4n+4) .ico{ color:var(--info); background:rgba(59,161,255,.14); }
+
+/* ---------- Course content tree: action groups stay usable on small screens ---------- */
+@media (max-width:560px){
+  .cc-head{ flex-direction:column; }
+  .cc-actions{ width:100%; }
+  .cc-actions .btn{ flex:1 1 auto; justify-content:center; }
+  .cc-lesson{ flex-direction:column; }
+  .cc-lesson .cc-actions{ margin-top:6px; }
+}
+
+/* ---------- My Courses: subtle hover lift, actions stack cleanly on phones ---------- */
+.mc-card{ transition:transform .15s ease, border-color .15s ease; }
+.mc-card:hover{ transform:translateY(-2px); border-color:var(--brand); }
+.mc-actions .btn{ flex:1 1 auto; justify-content:center; }
+@media (max-width:480px){
+  .mc-actions{ flex-direction:column; }
+}
+
+/* ---------- Students: search box (client-side, alongside the course filter) ---------- */
+.st-search{ position:relative; flex:1 1 220px; max-width:280px; }
+.st-search input{ padding-left:34px; }
+.st-search::before{
+  content:"\1F50D"; position:absolute; left:11px; top:50%; transform:translateY(-50%);
+  font-size:12px; opacity:.55; pointer-events:none;
+}
+@media (max-width:700px){
+  .st-bar{ flex-direction:column; align-items:stretch; }
+  .st-bar select, .st-search{ max-width:none; width:100%; }
+}
+
+/* ---------- Student Progress: overall completion summary ---------- */
+.sp-summary{ display:flex; align-items:center; gap:14px; padding:2px 0 18px; flex-wrap:wrap; }
+.sp-summary .sp-bar-outer{ flex:1 1 200px; height:10px; border-radius:999px; background:var(--surface-2); overflow:hidden; }
+.sp-summary .sp-bar-inner{ height:100%; background:linear-gradient(135deg,var(--brand),var(--brand-2)); }
+.sp-summary .sp-summary-text{ font-size:13px; color:var(--muted); white-space:nowrap; }
+@media (max-width:640px){
+  .sp-bar{ flex-direction:column; align-items:stretch; }
+  .sp-bar select{ min-width:0; width:100%; }
+}
+
+/* ---------- Profile: label/value stack cleanly on phones ---------- */
+@media (max-width:480px){
+  .pf-row{ flex-direction:column; gap:2px; }
+}
+
+/* ---------- Forms / modals: never exceed a short phone viewport ---------- */
+@media (max-width:480px){
+  .modal{ padding:16px 10px; }
+  .modal-card{ max-height:calc(100vh - 32px); overflow-y:auto; }
+  .cc-form .row{ flex-direction:column; }
+  .cc-form .f.sm{ flex:1 1 auto; }
+}
+
+/* ==========================================================================
+   PART 4/8 — Loading states, empty states & notification polish
+   Additive only: extends (never removes) the .empty/.toast rules that
+   already come from admin.css. Scoped to Teacher Admin via this file.
+   ========================================================================== */
+
+/* ---------- Skeleton loading placeholders (replace bare "Loading…" text) ---------- */
+.skeleton{ position:relative; overflow:hidden; background:var(--surface-2); border-radius:10px; }
+.skeleton::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);
+  transform:translateX(-100%);
+  animation:t-skel-shine 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion:reduce){ .skeleton::after{ animation:none; } }
+@keyframes t-skel-shine{ 100%{ transform:translateX(100%); } }
+.t-skel-row{ height:64px; border-radius:12px; margin-bottom:12px; }
+.t-skel-row:last-child{ margin-bottom:0; }
+.t-skel-card{ height:170px; border-radius:14px; }
+.t-skel-stat{ height:78px; border-radius:12px; }
+.t-skel-grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.t-skel-line{ height:13px; border-radius:6px; margin:0 0 8px; }
+.t-skel-line.w-60{ width:60%; }
+.t-skel-line.w-40{ width:40%; }
+.t-skel-select{ height:38px; width:100%; max-width:220px; border-radius:8px; display:inline-block; vertical-align:middle; }
+
+/* ---------- Empty / error state (icon + title + body + optional action) ---------- */
+.empty{ padding:34px 20px; text-align:center; color:var(--muted); }
+.empty .ico{ display:block; font-size:2rem; margin-bottom:10px; line-height:1; }
+.empty h4{ margin:0 0 6px; color:var(--text); font-size:15px; }
+.empty p{ margin:0; font-size:13.5px; }
+.empty .btn{ margin-top:16px; }
+.empty.empty-error{ color:#b3261e; }
+.empty.empty-error .ico{ color:#b3261e; }
+
+/* ---------- Inline spinner for short actions / button loading ---------- */
+.spinner{
+  display:inline-block; width:14px; height:14px; margin-right:7px; vertical-align:-2px;
+  border:2px solid var(--line); border-top-color:var(--brand); border-radius:50%;
+  animation:t-spin .7s linear infinite;
+}
+.btn-primary .spinner{ border-color:rgba(255,255,255,.45); border-top-color:#fff; }
+@keyframes t-spin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .spinner{ animation-duration:1.4s; } }
+button.btn[disabled]{ opacity:.65; cursor:not-allowed; }
+
+/* ---------- Dashboard stat values: subtle pulse while first loading ---------- */
+.stat .value.is-loading{
+  display:inline-block; width:44px; height:1em; border-radius:6px;
+  background:var(--surface-2); color:transparent; position:relative; overflow:hidden;
+}
+.stat .value.is-loading::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);
+  transform:translateX(-100%); animation:t-skel-shine 1.4s ease-in-out infinite;
+}
+.t-skel-line.w-90{ width:90%; }
+
+/* ==========================================================================
+   PART 5/8 — Component consistency polish (buttons, cards, modals, forms)
+   Additive only, same as PART 3/8 and PART 4/8: still never redefines
+   admin.css's own .btn/.card/.modal/.field selectors directly (so Main
+   Admin and the public site keep their current look) - it only adds new,
+   optional modifier classes and states on top of them, scoped to this file
+   which loads exclusively on Teacher Admin + Teacher Login.
+   ========================================================================== */
+
+/* ---------- Buttons: success / secondary / icon variants, consistent states ----------
+   .btn-danger already exists in admin.css and is reused as-is for destructive actions
+   (Remove Video, Deactivate). These two are new, following the same visual language. */
+.btn-success{ color:var(--ok); border-color:rgba(31,191,117,.4); }
+.btn-success:hover{ background:rgba(31,191,117,.12); color:var(--ok); border-color:var(--ok); }
+.btn-secondary{ background:var(--surface-2); color:var(--muted); }
+.btn-secondary:hover{ color:var(--text); border-color:var(--line); background:var(--surface); }
+
+/* Icon-only buttons (reorder ↑ / ↓ etc.): fixed square, centered glyph, same height as btn-sm. */
+.btn-icon{ padding:6px 10px; min-width:34px; justify-content:center; }
+
+/* Consistent, visible keyboard-focus ring across every interactive control in Teacher Admin -
+   mouse/touch clicks are unaffected (:focus-visible only triggers for keyboard/AT users). */
+.btn:focus-visible, .nav-item:focus-visible, .pw-toggle:focus-visible, .x:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible{
+  outline:2px solid var(--brand); outline-offset:2px;
+}
+/* A disabled button never looks interactive on hover, and the cursor/opacity rule from
+   PART 4/8 now also covers <a>-as-button and any element carrying [disabled] or .is-disabled. */
+.btn[disabled], .btn.is-disabled{ opacity:.6; cursor:not-allowed; pointer-events:none; }
+.btn[disabled]:hover{ border-color:var(--line); color:var(--text); }
+.btn-primary[disabled]:hover, .btn-primary.is-disabled:hover{ color:#111; }
+
+/* ---------- Modals: close button, comfortable width/spacing on every breakpoint ---------- */
+.modal-head{ position:relative; }
+.modal-close{
+  background:none; border:0; color:var(--muted); font-size:20px; line-height:1;
+  cursor:pointer; padding:4px 6px; border-radius:8px; margin:-4px -6px -4px 0;
+}
+.modal-close:hover{ color:var(--text); background:var(--surface-2); }
+.modal-body{ max-height:calc(100vh - 220px); overflow-y:auto; }
+@media (max-width:640px){
+  .modal{ padding:24px 14px; }
+}
+@media (max-width:480px){
+  .modal-head, .modal-foot{ padding:14px 16px; }
+  .modal-body{ padding:16px; max-height:calc(100vh - 190px); }
+  .modal-foot{ flex-wrap:wrap; }
+  .modal-foot .btn{ flex:1 1 auto; }
+}
+@media (max-width:390px){
+  .modal{ padding:16px 8px; }
+  .modal-head h3{ font-size:15.5px; }
+  .modal-body{ padding:14px; }
+}
+
+/* ---------- Forms: required-field marker + inline validation message ---------- */
+.req{ color:var(--danger); margin-left:3px; }
+.field-error{
+  display:none; color:var(--danger); font-size:12px; margin:6px 0 0;
+}
+.field-error.show{ display:block; }
+.f.has-error input, .f.has-error textarea,
+.field.has-error input, .field.has-error textarea{ border-color:var(--danger); }
+
+/* ==========================================================================
+   PART 1/2 — Accessibility & responsive quality pass (Teacher Admin only)
+   Additive, scoped to teacher-login.html + teacher-admin/*.html (the only
+   pages that load this file). Nothing here touches admin/*.html or the
+   public VITC website styling.
+   ========================================================================== */
+
+/* ---------- Screen-reader-only helper (labels, status words, table captions) ---------- */
+.t-sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* ---------- Skip link: first tab stop on every Teacher page ---------- */
+.t-skip-link{
+  position:absolute; left:-9999px; top:0; z-index:120;
+  background:var(--surface); color:var(--text); border:1px solid var(--brand);
+  border-radius:0 0 10px 0; padding:10px 16px; font-weight:600; text-decoration:none;
+}
+.t-skip-link:focus{ left:0; }
+#mainContent:focus{ outline:none; }
+
+/* ---------- Menu button: real 44x44 tap target + keyboard focus ring ---------- */
+.burger{ min-width:44px; min-height:44px; border-radius:10px; }
+.burger:focus-visible,
+.t-skip-link:focus-visible,
+a:focus-visible, [tabindex]:focus-visible,
+.modal-close:focus-visible, .nav-item:focus-visible{
+  outline:2px solid var(--brand); outline-offset:2px;
+}
+
+/* ---------- Toasts: status conveyed by icon + text, and never wider than a phone ---------- */
+.toast{ display:flex; align-items:flex-start; gap:8px; }
+.toast .toast-ico{ flex:0 0 auto; line-height:1.35; }
+.toast .toast-text{ min-width:0; overflow-wrap:anywhere; }
+@media (max-width:600px){
+  #toasts{ left:12px; right:12px; bottom:12px; }
+  .toast{ max-width:100%; }
+}
+
+/* ---------- Generic table safety: a table never scrolls the whole page ---------- */
+.content .table-wrap{ max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.content .table-wrap:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+
+/* ---------- Small-phone (360px) breathing room ---------- */
+@media (max-width:390px){
+  .content{ padding:12px; }
+  .card{ padding:14px; }
+  .topbar{ padding:12px; }
+  .topbar .who .avatar{ flex:0 0 auto; }
+  .btn{ overflow-wrap:anywhere; }
+}
+
+/* ---------- Reduced motion: honour the OS setting across Teacher Admin ---------- */
+@media (prefers-reduced-motion:reduce){
+  .sidebar, #stats .stat, .mc-card,
+  .course-outline-toggle .car, .btn{ transition:none !important; }
+  #stats .stat:hover, .mc-card:hover{ transform:none; }
+  .toast{ animation:none !important; }
+  *{ scroll-behavior:auto !important; }
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Pricing — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'pricing',
+  title: 'Manage Pricing',
+  singular: 'Pricing plan',
+  endpoint: '/pricing',
+  searchKeys: ['name', 'tagline', 'category', 'billingPeriod'],
+  labelOf: function (r) { return r.name; },
+  columns: [
+    { label: '#', render: function (r) { return Admin.esc(r.displayOrder); } },
+    { label: 'Plan', render: function (r) { return '<strong>' + Admin.esc(r.name) + '</strong><div class="muted">' + Admin.esc(r.tagline || '') + '</div>'; } },
+    { label: 'Price', render: function (r) {
+        return Admin.money(r.price) + (r.oldPrice ? ' <span class="muted" style="text-decoration:line-through">' + Admin.money(r.oldPrice) + '</span>' : '') +
+          '<div class="muted">' + Admin.esc(r.billingPeriod || '') + '</div>';
+      } },
+    { label: 'Category', render: function (r) { return Admin.esc(r.category || '—'); } },
+    { label: 'Features', render: function (r) { return Admin.esc((r.featureList || []).length) + ' items'; } },
+    { label: 'Highlighted', render: function (r) { return Admin.boolBadge(r.highlighted, 'Popular', '—'); } },
+    { label: 'Status', render: function (r) { return Admin.boolBadge(r.active, 'Active', 'Hidden'); } }
+  ],
+  rowActions: [{
+    label: function (r) { return r.active ? 'Hide' : 'Publish'; },
+    onClick: async function (r, reload) {
+      await Admin.api.patch('/pricing/' + r.id + '/active?active=' + (!r.active), undefined);
+      Admin.toast('Status updated', 'ok');
+      reload();
+    }
+  }],
+  fields: [
+    { name: 'name', label: 'Plan name', required: true, half: true },
+    { name: 'category', label: 'Category', type: 'select', allowEmpty: true, half: true,
+      options: ['COURSE', 'ASSIGNMENT', 'INTERNSHIP', 'OTHER'] },
+    { name: 'tagline', label: 'Tagline' },
+    { name: 'price', label: 'Price (₹)', type: 'number', step: '0.01', min: 0, required: true, half: true },
+    { name: 'oldPrice', label: 'Strike-through price (₹)', type: 'number', step: '0.01', min: 0, half: true },
+    { name: 'currency', label: 'Currency', half: true, default: 'INR' },
+    { name: 'billingPeriod', label: 'Billing period', half: true, placeholder: 'one-time / monthly' },
+    { name: 'features', label: 'Features (one per line)', type: 'textarea' },
+    { name: 'displayOrder', label: 'Display order', type: 'number', min: 0, default: 0 },
+    { name: 'highlighted', label: 'Highlight as "Most popular"', type: 'checkbox' },
+    { name: 'active', label: 'Active (visible on website)', type: 'checkbox', default: true }
+  ]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Manage Content — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  .cc-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  .cc-module { border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; background:var(--surface); }
+  .cc-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  .cc-head h3 { margin:0; font-size:15px; }
+  .cc-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .cc-inactive { opacity:.55; }
+  .cc-form { border:1px dashed var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; }
+  .cc-form .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .cc-form label { display:block; font-size:12px; font-weight:600; margin-bottom:4px; }
+  .cc-form input[type=text], .cc-form textarea, .cc-form input[type=number] {
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit; }
+  .cc-form .f { flex:1 1 240px; }
+  .cc-form .f.sm { flex:0 0 140px; }
+  .cc-lessons { margin:12px 0 0; padding:10px 0 0; border-top:1px dashed var(--line); }
+  .cc-lesson { display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+    flex-wrap:wrap; padding:8px 0; border-bottom:1px solid var(--line); }
+  .cc-lesson:last-child { border-bottom:0; }
+  .cc-lesson strong { font-size:14px; font-weight:600; }
+  .cc-lesson .muted { margin:2px 0 0; font-size:12px; }
+  .cc-empty-lessons { font-size:12px; color:var(--muted); padding:6px 0; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Manage Content</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <p style="margin-top:0"><a href="my-courses.html">&larr; Back to My Courses</a></p>
+
+      <div class="card" id="courseCard" aria-live="polite" aria-busy="true"></div>
+    </main>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("content");
+
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+
+  var card = document.getElementById("courseCard");
+  var esc = Teacher.esc;
+
+  Teacher.skeleton(card, { count: 3 });
+
+  /* The course id travels via the URL query string, but it is never trusted on its own -
+     the backend (/teacher/courses/{id} and /teacher/courses/{id}/content) re-checks that this
+     course is actually assigned to the logged-in teacher before returning or writing anything. */
+  var courseId = new URLSearchParams(window.location.search).get("courseId");
+  if (!courseId) {
+    Teacher.emptyState(card, {
+      icon: "\uD83D\uDCC2", title: "No course selected",
+      message: "Go back to My Courses and pick one to manage.",
+      actionHtml: '<a class="btn btn-secondary btn-sm" href="my-courses.html">Back to My Courses</a>'
+    });
+    return;
+  }
+
+  var course = null;
+  try {
+    course = await Teacher.api.get("/teacher/courses/" + encodeURIComponent(courseId));
+  } catch (e) {
+    /* Covers both "course does not exist" and "course exists but is not assigned to you" -
+       an unassigned course must never be manageable. */
+    Teacher.emptyState(card, {
+      icon: "\u26A0\uFE0F", title: "Couldn't open this course", error: true, message: e.message,
+      actionHtml: '<a class="btn btn-secondary btn-sm" href="my-courses.html">Back to My Courses</a>'
+    });
+    return;
+  }
+
+  card.removeAttribute("aria-busy");
+  card.innerHTML =
+    '<div id="courseInfo"></div>' +
+    '<div class="cc-bar">' +
+      '<button class="btn btn-primary" id="addBtn">+ Add Module</button>' +
+      '<span class="muted" id="summary"></span>' +
+    '</div>' +
+    '<div id="formHost"></div>' +
+    '<div id="tree" aria-live="polite" aria-busy="true"></div>';
+
+  var tree = card.querySelector("#tree");
+  Teacher.skeleton(tree, { count: 3, rowClass: "t-skel-card" });
+  var summary = card.querySelector("#summary");
+  var formHost = card.querySelector("#formHost");
+  var courseInfo = card.querySelector("#courseInfo");
+  card.querySelector("#addBtn").addEventListener("click", function () { openForm(null); });
+
+  /* PART 3/8 — course info (title/description only; code/price/category stay Admin-only). */
+  function renderCourseInfo() {
+    courseInfo.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
+        '<div>' +
+          '<h3 style="margin:0 0 4px">' + esc(course.title) + '</h3>' +
+          '<p class="muted" style="margin:0 0 4px">' +
+            (course.category ? esc(course.category) : "") +
+            (course.level ? " • " + esc(course.level) : "") +
+          '</p>' +
+          (course.description ? '<p class="muted" style="margin:0 0 4px;max-width:640px">' + esc(course.description) + '</p>' : '') +
+        '</div>' +
+        '<button class="btn btn-secondary btn-sm" id="courseEditBtn">Edit course info</button>' +
+      '</div>';
+    courseInfo.querySelector("#courseEditBtn").addEventListener("click", openCourseInfoForm);
+  }
+
+  function openCourseInfoForm() {
+    formHost.innerHTML =
+      '<div class="cc-form">' +
+        '<h4 style="margin:0 0 12px">Edit course info</h4>' +
+        '<div class="row"><div class="f" id="cTitleField">' +
+          '<label for="cTitle">Title<span class="req" aria-hidden="true">*</span></label>' +
+          '<input type="text" id="cTitle" maxlength="150" value="' + esc(course.title) + '">' +
+          '<p class="field-error" id="cTitleError"></p></div></div>' +
+        '<div class="row" style="margin-top:10px"><div class="f">' +
+          '<label for="cDesc">Description</label>' +
+          '<textarea id="cDesc" rows="4" maxlength="2000">' + esc(course.description || "") + '</textarea>' +
+        '</div></div>' +
+        '<p class="muted" style="margin:10px 0 0;font-size:12px">' +
+          'Code, price, category and level are managed by the Main Admin and are not editable here.</p>' +
+        '<div class="cc-actions" style="margin-top:12px">' +
+          '<button class="btn btn-primary btn-sm" id="cSave">Save changes</button>' +
+          '<button class="btn btn-secondary btn-sm" id="cCancel">Cancel</button>' +
+        '</div>' +
+      '</div>';
+    formHost.querySelector("#cCancel").addEventListener("click", function () { formHost.innerHTML = ""; });
+    formHost.querySelector("#cSave").addEventListener("click", async function () {
+      var title = formHost.querySelector("#cTitle").value.trim();
+      var titleField = formHost.querySelector("#cTitleField");
+      var titleErr = formHost.querySelector("#cTitleError");
+      if (!title) {
+        Teacher.fieldError(titleField, titleErr, "Title is required.");
+        Teacher.toast("Title is required", "err");
+        return;
+      }
+      Teacher.fieldError(titleField, titleErr, "");
+      var btn = this;
+      try {
+        await Teacher.withButtonLoading(btn, async function () {
+          course = await Teacher.api.put("/teacher/courses/" + encodeURIComponent(courseId), {
+            title: title,
+            description: formHost.querySelector("#cDesc").value.trim() || null
+          });
+        }, "Saving…");
+        Teacher.toast("Course info updated", "ok");
+        formHost.innerHTML = "";
+        renderCourseInfo();
+      } catch (e) { Teacher.toast(e.message, "err"); }
+    });
+    formHost.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  renderCourseInfo();
+
+  function moduleForm(m) {
+    var isEdit = !!m;
+    return '' +
+      '<div class="cc-form">' +
+        '<h4 style="margin:0 0 12px">' + (isEdit ? "Edit module" : "Add module") + '</h4>' +
+        '<div class="row">' +
+          '<div class="f" id="fTitleField"><label for="fTitle">Title<span class="req" aria-hidden="true">*</span></label>' +
+            '<input type="text" id="fTitle" maxlength="180" value="' + esc(isEdit ? m.title : "") + '">' +
+            '<p class="field-error" id="fTitleError"></p></div>' +
+          '<div class="f sm"><label for="fOrder">Order</label>' +
+            '<input type="number" id="fOrder" min="1" value="' + (isEdit && m.displayOrder ? m.displayOrder : "") + '"></div>' +
+        '</div>' +
+        '<div class="row" style="margin-top:10px"><div class="f">' +
+          '<label for="fDesc">Description</label>' +
+          '<textarea id="fDesc" rows="3" maxlength="1000">' + esc(isEdit ? (m.description || "") : "") + '</textarea>' +
+        '</div></div>' +
+        '<label style="margin-top:10px;font-weight:500">' +
+          '<input type="checkbox" id="fActive"' + (!isEdit || m.active ? " checked" : "") + '> Active' +
+        '</label>' +
+        '<div class="cc-actions" style="margin-top:12px">' +
+          '<button class="btn btn-primary btn-sm" id="fSave">' + (isEdit ? "Save changes" : "Create module") + '</button>' +
+          '<button class="btn btn-secondary btn-sm" id="fCancel">Cancel</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function lessonForm(l) {
+    var isEdit = !!l;
+    return '' +
+      '<div class="cc-form">' +
+        '<h4 style="margin:0 0 12px">' + (isEdit ? "Edit lesson" : "Add lesson") + '</h4>' +
+        '<div class="row">' +
+          '<div class="f" id="lTitleField"><label for="lTitle">Lesson title<span class="req" aria-hidden="true">*</span></label>' +
+            '<input type="text" id="lTitle" maxlength="180" value="' + esc(isEdit ? l.title : "") + '">' +
+            '<p class="field-error" id="lTitleError"></p></div>' +
+          '<div class="f sm"><label for="lOrder">Display order</label>' +
+            '<input type="number" id="lOrder" min="1" value="' + (isEdit && l.displayOrder ? l.displayOrder : "") + '"></div>' +
+        '</div>' +
+        '<div class="row" style="margin-top:10px"><div class="f">' +
+          '<label for="lDesc">Description</label>' +
+          '<textarea id="lDesc" rows="3" maxlength="1000">' + esc(isEdit ? (l.description || "") : "") + '</textarea>' +
+        '</div></div>' +
+        /* PART 8/8: the video for a lesson is set exclusively through the dedicated
+           "Add video"/"Edit video" -> Upload Video modal (openVideoForm below), which uploads a
+           real file via the multipart endpoint and is validated server-side. This form no longer
+           exposes a raw "Video URL" text box, so a teacher can no longer bypass that validation by
+           typing an arbitrary string straight into CourseLesson.videoUrl. Not sending the videoUrl/
+           duration keys at all leaves the lesson's existing video completely untouched, the same
+           documented fallback already proven by TeacherVideoManagementTest. */
+        '<label style="margin-top:10px;font-weight:500">' +
+          '<input type="checkbox" id="lActive"' + (!isEdit || l.active ? " checked" : "") + '> Active' +
+        '</label>' +
+        '<div class="cc-actions" style="margin-top:12px">' +
+          '<button class="btn btn-primary btn-sm" id="lSave">' + (isEdit ? "Save changes" : "Create lesson") + '</button>' +
+          '<button class="btn btn-secondary btn-sm" id="lCancel">Cancel</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* moduleId is only used for "add"; the backend re-checks that the module (and its course)
+     belongs to the logged-in teacher, so a tampered id is rejected with 403. */
+  function openLessonForm(moduleId, lesson) {
+    formHost.innerHTML = lessonForm(lesson);
+    formHost.querySelector("#lCancel").addEventListener("click", function () { formHost.innerHTML = ""; });
+    formHost.querySelector("#lSave").addEventListener("click", async function () {
+      var title = formHost.querySelector("#lTitle").value.trim();
+      var titleField = formHost.querySelector("#lTitleField");
+      var titleErr = formHost.querySelector("#lTitleError");
+      if (!title) {
+        Teacher.fieldError(titleField, titleErr, "Lesson title is required.");
+        Teacher.toast("Lesson title is required", "err");
+        return;
+      }
+      Teacher.fieldError(titleField, titleErr, "");
+      var orderRaw = formHost.querySelector("#lOrder").value;
+      var payload = {
+        title: title,
+        description: formHost.querySelector("#lDesc").value.trim() || null,
+        /* PART 8/8: video fields are intentionally omitted here - the video for a lesson is set
+           only through the dedicated Upload Video modal (openVideoForm), never through this form.
+           The backend's existing fallback (withVideoFallback) keeps whatever video is already
+           stored on the lesson untouched when these keys are absent. */
+        displayOrder: orderRaw ? Number(orderRaw) : null,
+        active: formHost.querySelector("#lActive").checked
+      };
+      var btn = this;
+      try {
+        await Teacher.withButtonLoading(btn, async function () {
+          if (lesson) await Teacher.api.put("/teacher/lessons/" + lesson.id, payload);
+          else await Teacher.api.post("/teacher/modules/" + moduleId + "/lessons", payload);
+        }, "Saving…");
+        Teacher.toast(lesson ? "Lesson updated" : "Lesson created", "ok");
+        formHost.innerHTML = "";
+        await load();
+      } catch (e) { Teacher.toast(e.message, "err"); }
+    });
+    formHost.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  /* PART 9C / PART 4/8 - video management. A "video" is the existing lesson row's videoUrl +
+     duration; the backend re-verifies teacher -> course -> module -> lesson before writing, so a
+     tampered lesson id is rejected with 403. Since PART 4/8 the write path is a file upload
+     (multipart/form-data) instead of a pasted URL - matches the multipart endpoint from PART 2/8. */
+  /* PART 2/10 - VIDEO UPLOAD: the supported containers, mirrored from the backend
+     (com.vitc.security.upload.VideoFormats). The backend remains the authority - it re-checks the
+     real container bytes - this list only powers the file picker and the friendly pre-check. */
+  var VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "avi", "mkv", "mpeg", "mpg", "m4v", "3gp", "flv", "ogv"];
+  var VIDEO_ACCEPT = "video/*," + VIDEO_EXTENSIONS.map(function (e) { return "." + e; }).join(",");
+
+  function videoExtensionOf(name) {
+    var n = (name || "").toLowerCase();
+    var dot = n.lastIndexOf(".");
+    return dot === -1 ? "" : n.slice(dot + 1).replace(/[^a-z0-9]/g, "");
+  }
+
+  function videoIsPlayableFile(url) {
+    var u = (url || "").toLowerCase().split("?")[0];
+    for (var i = 0; i < VIDEO_EXTENSIONS.length; i++) {
+      if (u.indexOf("." + VIDEO_EXTENSIONS[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function videoEmbedMarkup(url) {
+    var u = (url || "").toLowerCase();
+    if (u.indexOf("youtube.com") !== -1 || u.indexOf("youtu.be") !== -1 || u.indexOf("vimeo.com") !== -1) {
+      return '<iframe src="' + esc(url) + '" style="width:100%;max-width:480px;height:270px;border:0;border-radius:8px"' +
+        ' allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    }
+    if (videoIsPlayableFile(url)) {
+      return '<video controls style="width:100%;max-width:480px;max-height:270px;border-radius:8px;background:#000"' +
+        ' src="' + esc(Teacher.mediaUrl(url)) + '"></video>';
+    }
+    /* Any other external source (embed link etc.) - keep displaying it normally, same as before. */
+    return '<iframe src="' + esc(url) + '" style="width:100%;max-width:480px;height:270px;border:0;border-radius:8px"' +
+      ' allowfullscreen loading="lazy"></iframe>';
+  }
+
+  function videoForm(l) {
+    var hasVideo = !!(l.videoUrl && l.videoUrl.trim());
+    var currentBlock = hasVideo
+      ? '<div class="cc-video-current" style="margin-bottom:14px">' +
+          '<label style="display:block;margin-bottom:6px">Current Video:</label>' +
+          videoEmbedMarkup(l.videoUrl) +
+        '</div>'
+      : '<p class="muted" style="margin:0 0 14px">No video uploaded</p>';
+
+    return '' +
+      '<div class="cc-form">' +
+        '<h4 style="margin:0 0 12px">Video — ' + esc(l.title) + '</h4>' +
+        currentBlock +
+        '<div class="row">' +
+          '<div class="f">' +
+            '<label>Video</label>' +
+            '<input type="file" id="vFile" accept="' + VIDEO_ACCEPT + '" style="display:none">' +
+            '<button type="button" class="btn btn-secondary btn-sm" id="vChoose">Choose Video File</button>' +
+            '<p class="muted" style="font-size:11px;margin:6px 0 0">Supported: MP4, WebM, MOV, AVI, MKV, MPEG, MPG, M4V, 3GP, FLV, OGV (recommended: MP4)</p>' +
+            '<p class="muted" style="font-size:12px;margin:4px 0 0">Selected file: <span id="vFileName">No file selected</span></p>' +
+          '</div>' +
+          '<div class="f sm"><label for="vDur">Duration</label>' +
+            '<input type="text" id="vDur" maxlength="40" placeholder="12:40" value="' +
+              esc(l.duration || "") + '"></div>' +
+        '</div>' +
+        '<p class="muted" style="margin:10px 0 0;font-size:12px">' +
+          'Display order and active/inactive status are managed on the lesson itself and are ' +
+          'shared with the Student Portal automatically.</p>' +
+        '<p id="vStatus" class="muted" style="margin:10px 0 0;font-size:12px"></p>' +
+        '<div class="cc-actions" style="margin-top:12px">' +
+          '<button class="btn btn-primary btn-sm" id="vUpload" disabled>' +
+            (hasVideo ? "Replace Video" : "Upload Video") + '</button>' +
+          (hasVideo ? '<button class="btn btn-danger btn-sm" id="vRemove">Remove Video</button>' : '') +
+          '<button class="btn btn-secondary btn-sm" id="vCancel">Cancel</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function openVideoForm(lesson) {
+    var hasVideo = !!(lesson.videoUrl && lesson.videoUrl.trim());
+    formHost.innerHTML = videoForm(lesson);
+
+    var fileInput = formHost.querySelector("#vFile");
+    var chooseBtn = formHost.querySelector("#vChoose");
+    var fileNameEl = formHost.querySelector("#vFileName");
+    var uploadBtn = formHost.querySelector("#vUpload");
+    var removeBtn = formHost.querySelector("#vRemove");
+    var cancelBtn = formHost.querySelector("#vCancel");
+    var statusEl = formHost.querySelector("#vStatus");
+    var durInput = formHost.querySelector("#vDur");
+
+    function setBusy(busy, message) {
+      statusEl.textContent = message || "";
+      uploadBtn.disabled = busy || !fileInput.files[0];
+      chooseBtn.disabled = busy;
+      if (removeBtn) removeBtn.disabled = busy;
+      cancelBtn.disabled = busy;
+    }
+
+    chooseBtn.addEventListener("click", function () { fileInput.click(); });
+
+    /* PART 5/8: friendly client-side pre-check (type + the same 500MB limit the backend
+       enforces via app.video.max-file-size) so a teacher sees the problem immediately next to
+       the file name, instead of waiting for the upload to start and fail server-side. */
+    fileInput.addEventListener("change", function () {
+      var file = fileInput.files[0];
+      /* Extension-first check: many browsers report an empty or generic type for MKV / FLV /
+         OGV / 3GP, so a file is only rejected here when NEITHER its extension nor its declared
+         type looks like a video. Everything else is decided by the backend, which inspects the
+         real container bytes. */
+      if (file && VIDEO_EXTENSIONS.indexOf(videoExtensionOf(file.name)) === -1
+          && !/^video\//.test(file.type || "")) {
+        fileNameEl.innerHTML = esc(file.name) + ' <span style="color:var(--danger)">— not a supported video format</span>';
+        fileInput.value = "";
+        uploadBtn.disabled = true;
+        return;
+      }
+      if (file && file.size > 500 * 1024 * 1024) {
+        fileNameEl.innerHTML = esc(file.name) + ' <span style="color:var(--danger)">— larger than the 500MB limit</span>';
+        fileInput.value = "";
+        uploadBtn.disabled = true;
+        return;
+      }
+      fileNameEl.textContent = file ? file.name : "No file selected";
+      uploadBtn.disabled = !file;
+    });
+
+    cancelBtn.addEventListener("click", function () { formHost.innerHTML = ""; });
+
+    if (removeBtn) {
+      removeBtn.addEventListener("click", async function () {
+        /* PART 6B/8: explicit confirmation before a destructive removal - same window.confirm()
+           pattern already used elsewhere in the admin UI (see admin/emails.html). */
+        if (!confirm("Remove this lesson's video?\n\nThe lesson itself, its title, description and " +
+            "other settings are kept - only the video is removed. This cannot be undone.")) {
+          return;
+        }
+        try {
+          setBusy(true, "Removing video…");
+          await Teacher.api.del("/teacher/lessons/" + lesson.id + "/video");
+          Teacher.toast("Video removed successfully.", "ok");
+          formHost.innerHTML = "";
+          await load();
+        } catch (e) {
+          setBusy(false);
+          Teacher.toast(e.message, "err");
+        }
+      });
+    }
+
+    uploadBtn.addEventListener("click", async function () {
+      var file = fileInput.files[0];
+      if (!file) { Teacher.toast("Please select a video file.", "err"); return; }
+      var formData = new FormData();
+      formData.append("file", file);
+      var duration = durInput.value.trim();
+      if (duration) formData.append("duration", duration);
+      try {
+        /* PART 6A/8: disable every action on the form the instant upload starts, so a teacher
+           can't fire a second replace/remove/cancel while one is already in flight. */
+        setBusy(true, "Uploading video… 0%");
+        /* PART 5/8: real progress when the browser can compute it (regular file upload always
+           can); falls back to an indeterminate message instead of a fake percentage otherwise. */
+        await Teacher.api.uploadWithProgress("/teacher/lessons/" + lesson.id + "/video", formData, function (pct) {
+          statusEl.textContent = pct === null ? "Uploading video…" : ("Uploading video… " + pct + "%");
+        });
+        setBusy(false);
+        /* Same endpoint handles first upload and replace; only the message differs, based on
+           whether the lesson already had a video when this form was opened. On failure (the
+           catch below) nothing here runs, so the existing video/toast never changes. */
+        Teacher.toast(hasVideo ? "Video replaced successfully." : "Video uploaded successfully.", "ok");
+        formHost.innerHTML = "";
+        await load();
+      } catch (e) {
+        setBusy(false);
+        Teacher.toast(e.message, "err");
+      }
+    });
+
+    formHost.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function lessonList(m) {
+    var lessons = m.lessons || [];
+    var rows = lessons.map(function (l, i) {
+      return '<div class="cc-lesson' + (l.active ? "" : " cc-inactive") + '">' +
+        '<div>' +
+          '<strong>' + (l.displayOrder || i + 1) + '. ' + esc(l.title) + '</strong>' +
+          '<p class="muted">' + (l.active ? "Active" : "Inactive") +
+            (l.description ? ' • ' + esc(l.description) : '') + '</p>' +
+          '<p class="muted">' + (l.videoUrl
+            ? '🎬 ' + esc(l.videoUrl) + (l.duration ? ' • ' + esc(l.duration) : '')
+            : 'No video yet') + '</p>' +
+        '</div>' +
+        '<div class="cc-actions">' +
+          '<button class="btn btn-secondary btn-sm btn-icon" data-lact="up" data-id="' + l.id + '" aria-label="Move lesson up"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
+          '<button class="btn btn-secondary btn-sm btn-icon" data-lact="down" data-id="' + l.id + '" aria-label="Move lesson down"' + (i === lessons.length - 1 ? " disabled" : "") + '>↓</button>' +
+          '<button class="btn btn-secondary btn-sm" data-lact="edit" data-id="' + l.id + '">Edit</button>' +
+          '<button class="btn btn-secondary btn-sm" data-lact="video" data-id="' + l.id + '">' +
+            (l.videoUrl ? "Edit video" : "Add video") + '</button>' +
+          '<button class="btn ' + (l.active ? "btn-danger" : "btn-success") + ' btn-sm" data-lact="toggle" data-id="' + l.id + '" data-active="' + (l.active ? "1" : "0") + '">' +
+            (l.active ? "Deactivate" : "Activate") + '</button>' +
+          '<button class="btn btn-danger btn-sm" data-lact="delete" data-id="' + l.id + '">Delete</button>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+    return '<div class="cc-lessons">' +
+      (rows || '<div class="cc-empty-lessons">No lessons yet in this module.</div>') +
+      '<div class="cc-actions" style="margin-top:10px">' +
+        '<button class="btn btn-secondary btn-sm" data-addlesson="' + m.id + '">+ Add Lesson</button>' +
+      '</div></div>';
+  }
+
+  function openForm(m) {
+    formHost.innerHTML = moduleForm(m);
+    formHost.querySelector("#fCancel").addEventListener("click", function () { formHost.innerHTML = ""; });
+    formHost.querySelector("#fSave").addEventListener("click", async function () {
+      var title = formHost.querySelector("#fTitle").value.trim();
+      var titleField = formHost.querySelector("#fTitleField");
+      var titleErr = formHost.querySelector("#fTitleError");
+      if (!title) {
+        Teacher.fieldError(titleField, titleErr, "Title is required.");
+        Teacher.toast("Title is required", "err");
+        return;
+      }
+      Teacher.fieldError(titleField, titleErr, "");
+      var orderRaw = formHost.querySelector("#fOrder").value;
+      var payload = {
+        title: title,
+        description: formHost.querySelector("#fDesc").value.trim() || null,
+        displayOrder: orderRaw ? Number(orderRaw) : null,
+        active: formHost.querySelector("#fActive").checked
+      };
+      var btn = this;
+      try {
+        await Teacher.withButtonLoading(btn, async function () {
+          if (m) await Teacher.api.put("/teacher/modules/" + m.id, payload);
+          else await Teacher.api.post("/teacher/courses/" + encodeURIComponent(courseId) + "/modules", payload);
+        }, "Saving…");
+        Teacher.toast(m ? "Module updated" : "Module created", "ok");
+        formHost.innerHTML = "";
+        await load();
+      } catch (e) { Teacher.toast(e.message, "err"); }
+    });
+    formHost.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function render(content) {
+    var modules = content.modules || [];
+    summary.textContent = modules.length + " module(s) • " + (content.lessonCount || 0) + " lesson(s)";
+    if (!modules.length) {
+      Teacher.emptyState(tree, {
+        icon: "\uD83D\uDDC2\uFE0F", title: "No modules yet",
+        message: "Use \u201c+ Add Module\u201d above to create the first one.",
+        actionHtml: '<button type="button" class="btn btn-secondary btn-sm" id="emptyAddModuleBtn">+ Add Module</button>'
+      });
+      var emptyAddBtn = tree.querySelector("#emptyAddModuleBtn");
+      if (emptyAddBtn) emptyAddBtn.addEventListener("click", function () { openForm(null); });
+      return;
+    }
+    tree.removeAttribute("aria-busy");
+    tree.innerHTML = modules.map(function (m, i) {
+      return '<div class="cc-module' + (m.active ? "" : " cc-inactive") + '">' +
+        '<div class="cc-head">' +
+          '<div>' +
+            '<h3>Module ' + (m.displayOrder || i + 1) + ' — ' + esc(m.title) + '</h3>' +
+            '<p class="muted" style="margin:4px 0 0">' +
+              (m.active ? "Active" : "Inactive") +
+              ' • ' + (m.lessons ? m.lessons.length : 0) + ' lesson(s)' +
+              (m.description ? ' • ' + esc(m.description) : '') +
+            '</p>' +
+          '</div>' +
+          '<div class="cc-actions">' +
+            '<button class="btn btn-secondary btn-sm btn-icon" data-act="up" data-id="' + m.id + '" aria-label="Move module up"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
+            '<button class="btn btn-secondary btn-sm btn-icon" data-act="down" data-id="' + m.id + '" aria-label="Move module down"' + (i === modules.length - 1 ? " disabled" : "") + '>↓</button>' +
+            '<button class="btn btn-secondary btn-sm" data-act="edit" data-id="' + m.id + '">Edit</button>' +
+            '<button class="btn ' + (m.active ? "btn-danger" : "btn-success") + ' btn-sm" data-act="toggle" data-id="' + m.id + '" data-active="' + (m.active ? "1" : "0") + '">' +
+              (m.active ? "Deactivate" : "Activate") + '</button>' +
+            '<button class="btn btn-danger btn-sm" data-act="delete" data-id="' + m.id + '">Delete</button>' +
+          '</div>' +
+        '</div>' +
+        lessonList(m) +
+      '</div>';
+    }).join("");
+
+    tree.querySelectorAll("button[data-act]").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        var id = btn.getAttribute("data-id");
+        var act = btn.getAttribute("data-act");
+        if (act === "edit") {
+          openForm(modules.filter(function (x) { return String(x.id) === String(id); })[0]);
+          return;
+        }
+        /* Disable every action button in this row group immediately so a slow request
+           can never be double-submitted by an impatient click. */
+        var row = btn.closest(".cc-module");
+        var siblings = row ? row.querySelectorAll(".cc-head button[data-act]") : [btn];
+        if (act === "delete") {
+          /* PART 1/10: deleting removes the module, its lessons and their progress permanently.
+             Deactivate is the reversible option, so make the difference explicit here. */
+          if (!confirm("Delete \u201c" + (row && row.querySelector("h3") ? row.querySelector("h3").textContent : "this module") +
+              "\u201d permanently?\n\nIts lessons and student progress for them will be removed. " +
+              "Use Deactivate instead if you only want to hide it from students.")) {
+            return;
+          }
+        }
+        if (act === "toggle" && btn.getAttribute("data-active") === "1") {
+          /* PART 5/8: deactivating hides this module (and its lessons) from students immediately -
+             confirm first, same danger-action pattern already used for Remove Video. Re-activating
+             needs no confirmation since it only restores visibility. */
+          if (!confirm("Deactivate \u201c" + (row && row.querySelector("h3") ? row.querySelector("h3").textContent : "this module") +
+              "\u201d?\n\nStudents will no longer see this module or its lessons until it is activated again.")) {
+            return;
+          }
+        }
+        siblings.forEach(function (b) { b.disabled = true; });
+        try {
+          if (act === "up" || act === "down") {
+            await Teacher.api.patch("/teacher/modules/" + id + "/move?direction=" + (act === "up" ? -1 : 1));
+            Teacher.toast("Order updated", "ok");
+          } else if (act === "toggle") {
+            var next = btn.getAttribute("data-active") !== "1";
+            await Teacher.api.patch("/teacher/modules/" + id + "/status?active=" + next);
+            Teacher.toast(next ? "Module activated" : "Module deactivated", "ok");
+          } else if (act === "delete") {
+            await Teacher.api.del("/teacher/modules/" + id);
+            Teacher.toast("Module deleted", "ok");
+          }
+          await load();
+        } catch (e) {
+          Teacher.toast(e.message, "err");
+          siblings.forEach(function (b) { b.disabled = false; });
+        }
+      });
+    });
+
+    var allLessons = [];
+    modules.forEach(function (m) { (m.lessons || []).forEach(function (l) { allLessons.push(l); }); });
+
+    tree.querySelectorAll("button[data-addlesson]").forEach(function (btn) {
+      btn.addEventListener("click", function () { openLessonForm(btn.getAttribute("data-addlesson"), null); });
+    });
+
+    tree.querySelectorAll("button[data-lact]").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        var id = btn.getAttribute("data-id");
+        var act = btn.getAttribute("data-lact");
+        var lesson = allLessons.filter(function (x) { return String(x.id) === String(id); })[0];
+        if (act === "edit") { openLessonForm(null, lesson); return; }
+        if (act === "video") { openVideoForm(lesson); return; }
+        var row = btn.closest(".cc-lesson");
+        var siblings = row ? row.querySelectorAll(".cc-actions button[data-lact]") : [btn];
+        if (act === "delete") {
+          var title = lesson ? lesson.title : (row && row.querySelector("strong") ? row.querySelector("strong").textContent : "this lesson");
+          if (!confirm("Delete Lesson?\n\nAre you sure you want to delete this lesson? This action cannot be undone.")) {
+            return;
+          }
+        }
+        if (act === "toggle" && btn.getAttribute("data-active") === "1") {
+          if (!confirm("Deactivate \u201c" + (row && row.querySelector("strong") ? row.querySelector("strong").textContent : "this lesson") +
+              "\u201d?\n\nStudents will no longer see this lesson until it is activated again.")) {
+            return;
+          }
+        }
+        siblings.forEach(function (b) { b.disabled = true; });
+        try {
+          if (act === "up" || act === "down") {
+            await Teacher.api.patch("/teacher/lessons/" + id + "/move?direction=" + (act === "up" ? -1 : 1));
+            Teacher.toast("Lesson order updated", "ok");
+          } else if (act === "toggle") {
+            var next = btn.getAttribute("data-active") !== "1";
+            await Teacher.api.patch("/teacher/lessons/" + id + "/status?active=" + next);
+            Teacher.toast(next ? "Lesson activated" : "Lesson deactivated", "ok");
+          } else if (act === "delete") {
+            await Teacher.api.del("/teacher/lessons/" + id);
+            Teacher.toast("Lesson deleted successfully.", "ok");
+          }
+          await load();
+        } catch (e) {
+          Teacher.toast(e.message, "err");
+          siblings.forEach(function (b) { b.disabled = false; });
+        }
+      });
+    });
+  }
+
+  async function load() {
+    try {
+      var content = await Teacher.api.get("/teacher/courses/" + encodeURIComponent(courseId) + "/content");
+      render(content);
+    } catch (e) {
+      Teacher.emptyState(tree, { icon: "\u26A0\uFE0F", title: "Couldn't load course content", error: true, retry: true, message: e.message });
+      var btn = tree.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", load);
+    }
+  }
+
+  await load();
+
+  /* If the browser restores this page from bfcache (e.g. pressing "back"
+     after Logout), re-check auth instead of showing the cached page. */
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

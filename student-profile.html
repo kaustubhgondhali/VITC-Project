@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B3D91">
+<title>My Profile | Vandana IT Course (VITC)</title>
+<meta name="description" content="Manage your VITC student profile - contact details, profile photo and password.">
+<meta name="keywords" content="Vandana IT Course, IT Classes Uran, IT Institute Uran, Programming Classes Uran, Full Stack Course Uran, Python Classes Uran, Java Classes Uran, Digital Marketing Uran, Cyber Security Course Uran, Data Science Institute Uran, Internship Uran, Placement Institute Navi Mumbai, IT Training Navi Mumbai">
+<meta name="author" content="Vandana IT Course (VITC)">
+<link rel="canonical" href="/student-profile.html">
+<meta property="og:type" content="website">
+  <meta property="og:url" content="/student-profile.html">
+  <meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="My Profile | Vandana IT Course (VITC)">
+<meta property="og:description" content="Manage your VITC student profile - contact details, profile photo and password.">
+<meta property="og:image" content="assets/img/logo.jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="My Profile | Vandana IT Course (VITC)">
+<meta name="twitter:description" content="Manage your VITC student profile - contact details, profile photo and password.">
+<link rel="icon" type="image/jpeg" href="assets/img/logo.jpeg">
+<link rel="apple-touch-icon" href="assets/img/logo.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/student-portal.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"EducationalOrganization","name":"Vandana IT Course (VITC)","url":"https://vandanaitcourse.com","logo":"assets/img/logo.jpeg","telephone":"+919967874887","email":"info@vandanaitcourse.com","address":{"@type":"PostalAddress","streetAddress":"Near Gade Hospital, Shreeraj Nagar","addressLocality":"Uran","addressRegion":"Maharashtra","postalCode":"400702","addressCountry":"IN"},"sameAs":["https://facebook.com","https://instagram.com","https://linkedin.com","https://youtube.com"]}
+</script>
+</head>
+<body class="student-portal">
+<a class="sp-skip-link" href="#studentProfilePage">Skip to main content</a>
+<div id="loader"><img src="assets/img/logo.jpeg" alt="VITC"><div class="bar"><span></span></div></div>
+<div id="scroll-progress"></div>
+
+<div class="sa-shell">
+<div class="sa-topbar">
+<button type="button" class="sa-menu-btn" id="saMenuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="saSidebar"><span></span><span></span><span></span></button>
+<a class="sa-topbar-brand" href="student-dashboard.html"><img src="assets/img/logo.jpeg" alt="VITC Logo"><span>VITC Student Portal</span></a>
+</div>
+<div class="sa-backdrop" id="saBackdrop"></div>
+
+<aside class="sa-sidebar" id="saSidebar">
+<a class="sa-brand" href="student-dashboard.html">
+<img src="assets/img/logo.jpeg" alt="VITC Logo">
+<span class="sa-brand-text">VITC<small>Student Learning Portal</small></span>
+</a>
+<nav class="sa-nav" aria-label="Student navigation">
+<a href="student-dashboard.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">🏠</span>Dashboard</a>
+<p class="sa-nav-label">Learning</p>
+<a href="student-dashboard.html#studentCourses" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">📚</span>My Courses</a>
+<a href="student-dashboard.html#continueLearning" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">▶</span>Continue Learning</a>
+<a href="student-dashboard.html#studentStats" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">📈</span>My Progress</a>
+<a href="student-assignments.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">📝</span>Assignments</a>
+<a href="student-certificates.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">🏅</span>Certificates</a>
+<a href="student-resources.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">📁</span>Resources</a>
+<p class="sa-nav-label">Account</p>
+<a href="student-profile.html" class="sa-nav-link ssn-link ssn-active"><span class="sa-nav-ico" aria-hidden="true">👤</span>Profile</a>
+<a href="student-change-password.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">🔒</span>Change Password</a>
+<a href="student-settings.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">⚙️</span>Settings</a>
+<a href="index.html" class="sa-nav-link ssn-link"><span class="sa-nav-ico" aria-hidden="true">↗</span>Back to Website</a>
+</nav>
+<button type="button" class="sa-nav-link sa-logout ssn-link ssn-logout" id="subNavLogout"><span class="sa-nav-ico" aria-hidden="true">🚪</span>Logout</button>
+</aside>
+
+<main class="sa-main" id="studentProfilePage" tabindex="-1">
+<div class="sa-header">
+<span class="sa-header-tag">VITC Student Portal</span>
+<div class="sa-header-user" id="saHeaderUser" hidden>
+<span class="sa-header-avatar" id="saHeaderAvatar" aria-hidden="true"></span>
+<span class="sa-header-name" id="saHeaderName"></span>
+</div>
+</div>
+<div class="sa-page-head">
+<h1>My Profile</h1>
+<p>View and manage your VITC student account.</p>
+</div>
+<div class="container">
+
+<div id="profileLoading" aria-live="polite" aria-busy="true">
+<div class="profile-grid" aria-hidden="true">
+<div class="skeleton" style="height:280px;border-radius:16px"></div>
+<div class="profile-main">
+<div class="skeleton" style="height:120px;border-radius:14px"></div>
+<div class="skeleton" style="height:160px;border-radius:14px"></div>
+</div>
+</div>
+<p class="sr-only">Loading your profile…</p>
+</div>
+
+<div id="profileError" class="student-state-box student-state-error" style="display:none" role="alert" aria-live="assertive">
+<p id="profileErrorMsg">We couldn't load your profile. Please check your connection.</p>
+<button class="btn btn-ghost" id="profileRetry" type="button">Try again</button>
+</div>
+
+<div id="profileCard" style="display:none">
+<div class="profile-grid">
+
+<!-- Left: avatar + identity summary -->
+<div class="profile-side-card reveal">
+<div class="profile-avatar-lg" id="profileAvatarLg" aria-hidden="true"></div>
+<label class="profile-avatar-edit" for="profileAvatarInput">
+📷 Change photo
+<input type="file" id="profileAvatarInput" accept="image/png,image/jpeg,image/gif,image/webp">
+</label>
+<div id="profileAvatarMsg" class="student-msg" style="margin-top:12px;text-align:left" role="status" aria-live="polite"></div>
+<h3 id="profileSideName">—</h3>
+<span class="role-pill" id="profileSideRole">Student</span>
+<p class="muted-line">Student ID: <b id="profileSideId">—</b></p>
+<p class="muted-line" id="profileMemberSince">Member since —</p>
+</div>
+
+<!-- Right: profile information, course statistics, edit, password -->
+<div class="profile-main">
+
+<div class="student-auth-card reveal">
+<div class="profile-section-head sp-section-head">
+<h2>Profile Information</h2>
+<button class="btn btn-ghost sp-edit-btn" type="button" id="profileEditToggle">✎ Edit Profile</button>
+</div>
+<div class="student-cred-grid profile-readonly-grid" id="profileViewGrid">
+<div><small>Student Name</small><b id="profileNameOut">—</b></div>
+<div><small>Email</small><b id="profileEmailOut">—</b></div>
+<div><small>Phone</small><b id="profilePhoneOut">—</b></div>
+<div><small>City</small><b id="profileCityOut">—</b></div>
+<div><small>Role</small><b id="profileRoleOut">Student</b></div>
+<div><small>Member Since</small><b id="profileMemberSinceOut">—</b></div>
+<div><small>Student ID</small><b id="profileStudentIdOut">—</b></div>
+<div><small>Last Login</small><b id="profileLastLoginOut">—</b></div>
+</div>
+<p class="profile-locked-hint">🔒 Student ID, email, role and account status are managed by VITC and can’t be edited here. Contact support if these need to change.</p>
+
+<div id="profileEditWrap" hidden>
+<div id="editProfileMsg" class="student-msg" role="status" aria-live="polite"></div>
+<form id="editProfileForm" novalidate>
+<div class="field" id="editFullNameField"><label for="editFullName">Full name<span class="req" aria-hidden="true">*</span></label><input id="editFullName" type="text" maxlength="120" required><p class="field-error" id="editFullNameError"></p></div>
+<div class="field-row">
+<div class="field"><label for="editPhone">Phone</label><input id="editPhone" type="tel" maxlength="20" placeholder="e.g. 9876543210"></div>
+<div class="field"><label for="editCity">City</label><input id="editCity" type="text" maxlength="120" placeholder="e.g. Uran"></div>
+</div>
+<div class="sp-form-actions">
+<button class="btn btn-primary" type="submit" id="editProfileSubmit">Save changes</button>
+<button class="btn btn-ghost" type="button" id="editProfileCancel">Cancel</button>
+</div>
+</form>
+</div>
+</div>
+
+<div class="student-auth-card reveal">
+<div class="profile-section-head"><h2>Course Statistics</h2></div>
+<div id="profileStatsMsg" class="student-msg" role="status" aria-live="polite"></div>
+<div class="sp-stat-grid">
+<div class="sp-stat"><small>Enrolled Courses</small><b id="statEnrolled">—</b></div>
+<div class="sp-stat"><small>Completed Courses</small><b id="statCompleted">—</b></div>
+<div class="sp-stat"><small>Courses In Progress</small><b id="statInProgress">—</b></div>
+<div class="sp-stat"><small>Overall Progress</small><b id="statOverall">—</b></div>
+</div>
+<div class="sp-progress" role="progressbar" aria-labelledby="statOverallLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="statOverallBarWrap">
+<span id="statOverallBar" style="width:0%"></span>
+</div>
+<p class="muted-line" id="statOverallLabel">Overall progress across all your enrolled courses.</p>
+</div>
+
+<div class="student-auth-card reveal">
+<div class="profile-section-head"><h2>Password</h2></div>
+<p style="color:var(--muted);margin:0 0 16px;font-size:.94rem">For security, password changes happen on their own dedicated page.</p>
+<a class="btn btn-primary" href="student-change-password.html">Change Password</a>
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+</main>
+</div>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/student.js"></script>
+<script src="assets/js/student-sidebar.js"></script>
+<script src="assets/js/upgrade.js"></script>
+</body>
+</html>

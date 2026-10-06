@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<!-- Never let the browser bfcache/back-forward-cache serve this page after logout. -->
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Teacher Admin Dashboard — VITC</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  .tc-row { display:flex; justify-content:space-between; align-items:center; gap:12px;
+            padding:14px 0; border-top:1px dashed var(--line); flex-wrap:wrap; }
+  .tc-row:first-child { border-top:none; }
+  .tc-row .tc-info { min-width:220px; }
+  .tc-row .tc-title { font-weight:700; font-size:15px; }
+  .tc-row .tc-meta { color:var(--muted); font-size:13px; margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Teacher Admin Dashboard</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="changePasswordBtn">Change Password</button>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div class="card" id="welcomeCard" style="margin-bottom:16px">
+        <h3 style="margin:0" id="welcomeHeading">Welcome, …</h3>
+        <p class="muted" style="margin:6px 0 0">
+          Here's an overview of your courses and students.
+        </p>
+      </div>
+
+      <div class="grid stats" id="stats">
+        <div class="card stat"><div class="ico">▣</div><div class="label">My Courses</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">▤</div><div class="label">Total Modules</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">▥</div><div class="label">Total Lessons</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">▶</div><div class="label">Total Videos</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">◍</div><div class="label">Active Students</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">✓</div><div class="label">Published Courses</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">✎</div><div class="label">Draft Courses</div><div class="value is-loading">…</div></div>
+        <div class="card stat"><div class="ico">☰</div><div class="label">Total Enrolled Students</div><div class="value is-loading">…</div></div>
+      </div>
+
+      <div class="card" id="myCoursesCard" style="margin-top:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <h3 style="margin:0 0 4px">My Courses</h3>
+            <p class="muted" style="margin:0">
+              Only courses assigned to you by the Main Admin appear here.
+            </p>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="my-courses.html">View all courses</a>
+        </div>
+        <div id="myCoursesList" style="margin-top:16px" aria-live="polite" aria-busy="true"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ Change password (opened voluntarily, never forced) ============ -->
+<div class="modal" id="pwModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Change password</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    </div>
+    <form id="pwForm">
+      <div class="modal-body">
+        <p class="muted" style="margin-top:0" id="pwModalHint">
+          Enter your current password and choose a new one.
+        </p>
+        <div class="field">
+          <label for="currentPassword">Current password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="currentPassword" type="password" required autocomplete="current-password">
+            <button type="button" class="pw-toggle" data-target="currentPassword" aria-pressed="false" aria-label="Show current password">Show</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="newPassword">New password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="newPassword" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="newPassword" aria-pressed="false" aria-label="Show new password">Show</button>
+          </div>
+        </div>
+        <div class="field" id="confirmPasswordField">
+          <label for="confirmPassword">Confirm new password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="confirmPassword" type="password" required minlength="8" placeholder="Repeat the password" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirmed password">Show</button>
+          </div>
+          <p class="field-error" id="confirmPasswordError"></p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary btn-sm" type="button" id="pwCancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="pwSaveBtn">Save password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("dashboard");
+
+  Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-target"));
+      if (!input) return;
+      var show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+      /* PART 1/2 accessibility: announce which field the toggle controls and its state. */
+      var lbl = (document.querySelector('label[for="' + input.id + '"]') || {}).textContent || "password";
+      lbl = lbl.replace(/\*/g, "").trim().toLowerCase();
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", (show ? "Hide " : "Show ") + lbl);
+    });
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+  document.getElementById("changePasswordBtn").addEventListener("click", function () { openPasswordModal(); });
+  document.getElementById("pwCancelBtn").addEventListener("click", function () { closePasswordModal(); });
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+  document.getElementById("welcomeHeading").textContent = "Welcome, " + displayName;
+
+  /* ============ Dashboard statistics (own courses only) ============ */
+  function statCard(index, value) {
+    var cards = document.querySelectorAll("#stats .stat .value");
+    if (cards[index]) { cards[index].classList.remove("is-loading"); cards[index].textContent = value; }
+  }
+
+  function loadStats() {
+    Teacher.api.get("/teacher/dashboard/stats").then(function (s) {
+      statCard(0, s.myCourses);
+      statCard(1, s.totalModules);
+      statCard(2, s.totalLessons);
+      statCard(3, s.totalVideos);
+      statCard(4, s.activeStudents);
+      statCard(5, s.publishedCourses);
+      statCard(6, s.draftCourses);
+      statCard(7, s.totalEnrolledStudents);
+    }).catch(function (e) {
+      Teacher.emptyState(document.getElementById("stats"), {
+        icon: "\u26A0\uFE0F", title: "Couldn't load statistics", error: true, retry: true, message: e.message
+      });
+      var btn = document.getElementById("stats").querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", loadStats);
+    });
+  }
+  loadStats();
+
+  /* ============ My Courses (assigned to this teacher only) ============ */
+  function renderMyCourses(courses, host) {
+    host.innerHTML = courses.map(function (c) {
+      return '' +
+        '<div class="tc-row">' +
+          '<div class="tc-info">' +
+            '<div class="tc-title">' + Teacher.esc(c.title) + '</div>' +
+            '<div class="tc-meta">' +
+              (c.category ? Teacher.esc(c.category) : "") +
+              (c.level ? " • " + Teacher.esc(c.level) : "") +
+            '</div>' +
+          '</div>' +
+          '<button class="btn btn-primary btn-sm tc-manage" data-id="' + c.id + '">Manage Content</button>' +
+        '</div>';
+    }).join("");
+
+    Array.prototype.forEach.call(host.querySelectorAll(".tc-manage"), function (btn) {
+      btn.addEventListener("click", function () {
+        var courseId = btn.getAttribute("data-id");
+        window.location.href = "course-content.html?courseId=" + encodeURIComponent(courseId);
+      });
+    });
+  }
+
+  Teacher.load(
+    document.getElementById("myCoursesList"),
+    function () { return Teacher.api.get("/teacher/courses"); },
+    renderMyCourses,
+    { icon: "\uD83D\uDCDA", title: "No courses assigned yet", message: "Contact the Main Admin to get a course assigned to your account." }
+  );
+
+  var pwModal = Teacher.bindModal("pwModal", {
+    onClose: function () {
+      document.getElementById("pwForm").reset();
+      Teacher.fieldError(document.getElementById("confirmPasswordField"), document.getElementById("confirmPasswordError"), "");
+    }
+  });
+  function openPasswordModal() { pwModal.open(); }
+  function closePasswordModal() { pwModal.close(); }
+
+  document.getElementById("pwForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var newPw = document.getElementById("newPassword").value;
+    var confirmPw = document.getElementById("confirmPassword").value;
+    var confirmField = document.getElementById("confirmPasswordField");
+    var confirmErr = document.getElementById("confirmPasswordError");
+    if (newPw !== confirmPw) {
+      Teacher.fieldError(confirmField, confirmErr, "New password and confirmation do not match.");
+      Teacher.toast("New password and confirmation do not match.", "err");
+      return;
+    }
+    Teacher.fieldError(confirmField, confirmErr, "");
+    var btn = document.getElementById("pwSaveBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      var res = await Teacher.api.post("/teacher/auth/change-password", {
+        currentPassword: document.getElementById("currentPassword").value,
+        newPassword: newPw,
+        confirmPassword: confirmPw
+      });
+      /* Password change issues a fresh session token — store it and drop the
+         must-change-password flag so the modal will not reappear. */
+      Teacher.setSession({ sessionToken: res.sessionToken, mustChangePassword: false, teacher: res.teacher });
+      Teacher.toast("Password updated.", "ok");
+      closePasswordModal();
+    } catch (err) {
+      Teacher.toast(err.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Save password";
+    }
+  });
+
+  /* Server-side session re-check. The dashboard is never blocked by a forced
+     password-change popup - it's entirely the teacher's choice, via the
+     "Change Password" button above, whenever they want to use it. If this
+     account is still on its initial password, show a small dismissible
+     reminder instead of an unclosable modal. */
+  var profile = await Teacher.verifySession();
+  var stillOnInitialPassword = (profile && profile.mustChangePassword) || (!profile && session.mustChangePassword);
+  if (stillOnInitialPassword) {
+    var reminder = document.createElement("p");
+    reminder.className = "muted";
+    reminder.style.margin = "10px 0 0";
+    reminder.innerHTML = "This account is still using its initial password. " +
+      "You can change it anytime with the <strong>Change Password</strong> button above. " +
+      '<a href="#" id="dismissPwReminder" style="margin-left:8px">Dismiss</a>';
+    document.getElementById("welcomeCard").appendChild(reminder);
+    document.getElementById("dismissPwReminder").addEventListener("click", function (e) {
+      e.preventDefault();
+      reminder.remove();
+    });
+  }
+
+  /* If the browser restores this page from bfcache (e.g. pressing "back"
+     after Logout), re-check auth instead of showing the cached dashboard. */
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

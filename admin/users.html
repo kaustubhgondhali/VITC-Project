@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Users — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'users',
+  title: 'Manage Users',
+  singular: 'User',
+  endpoint: '/users',
+  canCreate: false,
+  canEdit: false,
+  searchKeys: ['fullName', 'email', 'phone', 'status', 'role'],
+  labelOf: function (r) { return r.fullName || r.email; },
+  columns: [
+    { label: 'Name', render: function (r) { return Admin.esc(r.fullName || '—') + '<div class="muted">' + Admin.esc(r.email) + '</div>'; } },
+    { label: 'Phone', render: function (r) { return Admin.esc(r.phone || '—'); } },
+    { label: 'Role', render: function (r) { return '<span class="badge badge-info">' + Admin.esc(r.role || 'USER') + '</span>'; } },
+    { label: 'Status', render: function (r) { return Admin.statusBadge(r.status); } },
+    { label: 'Joined', render: function (r) { return Admin.date(r.createdAt); } }
+  ],
+  rowActions: [
+    { label: function (r) { return r.status === 'ACTIVE' ? 'Block' : 'Activate'; },
+      onClick: async function (r, reload) {
+        var next = r.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE';
+        await Admin.api.patch('/users/' + r.id + '/status?status=' + next, undefined);
+        Admin.toast('Status updated', 'ok');
+        reload();
+      } }
+  ]
+});
+</script>
+</body>
+</html>

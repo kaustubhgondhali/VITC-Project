@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Students — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  /* PART 4/8 — Students page: a real <table> on desktop, stacked cards on narrow screens.
+     No fixed/min-width on the table, so it never forces horizontal scrolling. */
+  .st-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  .st-bar select { padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;
+    background:var(--surface); color:var(--text); min-width:200px; }
+  .st-count { color:var(--muted); font-size:13px; }
+
+  /* admin.css sets a global table{min-width:640px}; that min-width is what previously forced
+     the whole Students page to scroll horizontally (and stretched the mobile cards). Reset it
+     here and give the wrapper its own controlled, keyboard-reachable horizontal scroll. */
+  .st-table { width:100%; min-width:0; border-collapse:collapse; font-size:14px; }
+  .st-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .st-table-wrap:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .st-table thead th { text-align:left; padding:10px 12px; font-size:12px; letter-spacing:.6px;
+    text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); }
+  .st-table tbody td { padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .st-table tbody tr:last-child td { border-bottom:0; }
+  .st-table tbody tr:hover { background:rgba(255,255,255,.02); }
+  .st-name { font-weight:700; }
+  .st-email { color:var(--muted); font-size:13px; margin-top:2px; }
+  .st-progress-wrap { min-width:140px; }
+  .st-bar-outer { background:var(--surface-2); border-radius:999px; height:8px; overflow:hidden; }
+  .st-bar-inner { background:var(--brand); height:100%; }
+  .st-progress-text { font-size:12px; color:var(--muted); margin-top:4px; white-space:nowrap; }
+  .st-last { font-size:13px; color:var(--muted); white-space:nowrap; }
+
+  /* Mobile: convert the table into a stack of cards, one per student — no horizontal overflow. */
+  @media (max-width:700px) {
+    .st-table-wrap { overflow:visible; background:none; border:0; }
+    .st-table thead { display:none; }
+    .st-table, .st-table tbody, .st-table tr, .st-table td { display:block; width:100%; }
+    .st-table tr { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px; }
+    .st-table td { border-bottom:0; padding:6px 0; }
+    .st-table td[data-label]::before {
+      content: attr(data-label); display:block; font-size:11px; letter-spacing:.5px;
+      text-transform:uppercase; color:var(--muted); margin-bottom:2px;
+    }
+    .st-progress-wrap { max-width:none; }
+    td.st-actions-cell { text-align:left; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Students</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div class="card">
+        <div class="st-bar">
+          <label for="courseSelect" style="font-weight:600;font-size:13px">Course:</label>
+          <select id="courseSelect"><option value="">Loading your courses…</option></select>
+          <div class="st-search">
+            <label class="t-sr-only" for="studentSearch">Search students by name or email</label>
+            <input type="text" id="studentSearch" placeholder="Search by name or email…" autocomplete="off">
+          </div>
+          <span class="st-count" id="countLabel"></span>
+        </div>
+        <div id="studentsList" aria-live="polite" aria-busy="true"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("students");
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+
+  var esc = Teacher.esc;
+  var params = new URLSearchParams(window.location.search);
+  var preselectCourseId = params.get("courseId");
+  var select = document.getElementById("courseSelect");
+  var listHost = document.getElementById("studentsList");
+  var countLabel = document.getElementById("countLabel");
+
+  /* PART 4/8 — one call gets every student across every course assigned to this teacher; the
+     backend (TeacherStudentProgressService.myStudents) re-derives the course list from the
+     teacher's own session, so an unrelated course's enrollments can never appear here. */
+  var allStudents = [];
+
+  function statusBadge(status) {
+    return status === "ACTIVE"
+      ? '<span class="badge badge-ok">Active</span>'
+      : status === "COMPLETED"
+        ? '<span class="badge badge-info">Completed</span>'
+        : '<span class="badge badge-muted">' + esc(status) + '</span>';
+  }
+
+  function renderRows(list) {
+    if (!list.length) {
+      Teacher.emptyState(listHost, allStudents.length
+        ? { icon: "\uD83D\uDD0D", title: "No matching students", message: "No students enrolled in this course yet, or none match your search." }
+        : { icon: "\uD83D\uDC65", title: "No students yet", message: "No students are enrolled in any of your courses yet." });
+      return;
+    }
+    listHost.innerHTML =
+      '<div class="table-wrap st-table-wrap" tabindex="0" role="region" aria-label="Students and progress"><table class="st-table"><thead><tr>' +
+        '<th scope="col">Student</th><th scope="col">Course</th><th scope="col">Status</th><th scope="col">Progress</th>' +
+        '<th scope="col">Last activity</th><th scope="col"><span class="t-sr-only">Actions</span></th>' +
+      '</tr></thead><tbody>' +
+      list.map(function (s) {
+        var last = s.lastWatchedAt ? new Date(s.lastWatchedAt).toLocaleString() : "No activity yet";
+        return '' +
+          '<tr>' +
+            '<td data-label="Student"><div class="st-name">' + esc(s.fullName || s.studentLoginId) + '</div>' +
+              '<div class="st-email">' + esc(s.email || "") + '</div></td>' +
+            '<td data-label="Course">' + esc(s.courseTitle || "") + '</td>' +
+            '<td data-label="Status">' + statusBadge(s.enrollmentStatus) + '</td>' +
+            '<td data-label="Progress"><div class="st-progress-wrap">' +
+              '<div class="st-bar-outer" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + (s.progressPercentage || 0) +
+              '" aria-label="Course progress"><div class="st-bar-inner" style="width:' + (s.progressPercentage || 0) + '%"></div></div>' +
+              '<div class="st-progress-text">' + (s.progressPercentage || 0) + '% · ' + s.completedLessons + '/' + s.totalLessons + ' lessons</div>' +
+            '</div></td>' +
+            '<td data-label="Last activity"><span class="st-last">' + esc(last) + '</span></td>' +
+            '<td class="st-actions-cell" data-label="">' +
+              '<button class="btn btn-secondary btn-sm st-view" data-student-id="' + s.studentId + '" data-course-id="' + s.courseId + '"' +
+                ' aria-label="View progress for ' + esc(s.fullName || s.studentLoginId) + '">View Progress</button>' +
+            '</td>' +
+          '</tr>';
+      }).join("") +
+      '</tbody></table></div>';
+    listHost.removeAttribute("aria-busy");
+
+    Array.prototype.forEach.call(listHost.querySelectorAll(".st-view"), function (btn) {
+      btn.addEventListener("click", function () {
+        window.location.href = "student-progress.html?courseId=" + encodeURIComponent(btn.getAttribute("data-course-id")) +
+          "&studentId=" + encodeURIComponent(btn.getAttribute("data-student-id"));
+      });
+    });
+  }
+
+  var searchInput = document.getElementById("studentSearch");
+
+  /* PART 3/8: search is purely client-side over the students already fetched above (no new
+     backend endpoint) - matches by name, login id or email, combined with the course filter. */
+  function applyFilter() {
+    var courseId = select.value;
+    var q = searchInput.value.trim().toLowerCase();
+    var filtered = allStudents.filter(function (s) {
+      if (courseId && String(s.courseId) !== courseId) return false;
+      if (!q) return true;
+      var hay = ((s.fullName || "") + " " + (s.studentLoginId || "") + " " + (s.email || "")).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    countLabel.textContent = filtered.length + " student(s)";
+    renderRows(filtered);
+  }
+
+  function populateCourseFilter(courses) {
+    var options = '<option value="">All courses</option>' + courses.map(function (c) {
+      return '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+    }).join("");
+    select.innerHTML = options;
+    if (preselectCourseId && courses.some(function (c) { return String(c.id) === preselectCourseId; })) {
+      select.value = preselectCourseId;
+    }
+  }
+
+  Teacher.skeleton(listHost, { count: 4 });
+
+  async function loadStudentsPage() {
+    try {
+      var courses = await Teacher.api.get("/teacher/courses");
+      if (!courses || !courses.length) {
+        select.innerHTML = '<option value="">No courses assigned</option>';
+        select.disabled = true;
+        Teacher.emptyState(listHost, { icon: "\uD83D\uDCDA", title: "No courses assigned yet", message: "Contact the Main Admin to get a course assigned to your account." });
+        return;
+      }
+      populateCourseFilter(courses);
+
+      allStudents = await Teacher.api.get("/teacher/students");
+      applyFilter();
+    } catch (e) {
+      Teacher.emptyState(listHost, { icon: "\u26A0\uFE0F", title: "Something went wrong", error: true, retry: true, message: e.message });
+      var btn = listHost.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", loadStudentsPage);
+    }
+  }
+  await loadStudentsPage();
+
+  select.addEventListener("change", applyFilter);
+  searchInput.addEventListener("input", applyFilter);
+
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

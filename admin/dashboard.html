@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Dashboard — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+(async function () {
+  var mount = Admin.renderShell('dashboard', 'Dashboard');
+  if (!mount) return;
+  mount.innerHTML = '<div class="grid stats" id="stats"></div>' +
+    '<div class="grid dashboard-grid mt-16">' +
+      '<div class="card dashboard-panel dashboard-payments"><h3 style="margin-top:0">Latest payments</h3><div id="payments" class="muted">Loading…</div></div>' +
+      '<div class="card dashboard-panel"><h3 style="margin-top:0">Latest orders</h3><div id="orders" class="muted">Loading…</div></div>' +
+      '<div class="card dashboard-panel"><h3 style="margin-top:0">Reviews awaiting approval</h3><div id="reviews" class="muted">Loading…</div></div>' +
+    '</div>';
+
+  function stat(label, value, icon) {
+    return '<div class="card stat"><div class="ico">' + icon + '</div><div class="label">' + label + '</div>' +
+      '<div class="value">' + value + '</div></div>';
+  }
+
+  try {
+    var s = await Admin.api.get('/admins/dashboard/stats');
+    var rev = Admin.money(s.totalRevenue != null ? s.totalRevenue : 0);
+    var studentsCount = s.totalStudents || 0;
+    var activeStudentsCount = s.activeStudents != null ? s.activeStudents : 0;
+    var studentsVal = studentsCount + ' <span style="font-size:13px;font-weight:normal;color:var(--muted)">(' + activeStudentsCount + ' active)</span>';
+    var reviewsCount = s.totalReviews || 0;
+    var pendingReviewsCount = s.pendingReviews != null ? s.pendingReviews : 0;
+    var reviewsVal = reviewsCount + ' <span style="font-size:13px;font-weight:normal;color:var(--muted)">(' + pendingReviewsCount + ' pending)</span>';
+
+    document.getElementById('stats').innerHTML =
+      stat('Revenue (successful)', rev, '₹') +
+      stat('Students', studentsVal, '🎓') +
+      stat('Teachers', s.totalTeachers || 0, '👩‍🏫') +
+      stat('Courses', s.totalCourses || 0, '▣') +
+      stat('Enrollments', s.totalEnrollments || 0, '✓') +
+      stat('Orders', s.totalOrders || 0, '☰') +
+      stat('Payments', s.totalPayments || 0, '▦') +
+      stat('Assignments', s.totalAssignments || 0, '✎') +
+      stat('Exams', s.totalExams || 0, '📝') +
+      stat('Internships', s.totalInternships || 0, '⚐') +
+      stat('Job Openings', s.totalJobs || 0, '💼') +
+      stat('Employer Enquiries', s.totalEmployerEnquiries || 0, '🏢') +
+      stat('Reviews', reviewsVal, '★') +
+      stat('Gallery items', s.totalGalleryItems || 0, '▩') +
+      stat('FAQs', s.totalFaqs || 0, '?') +
+      stat('System Users', s.totalUsers || 0, '◍');
+  } catch (e) {
+    document.getElementById('stats').innerHTML = '<div class="card">' + Admin.esc(e.message) + '</div>';
+  }
+
+  function list(items, render, emptyText, tableClass) {
+    if (!items || !items.length) return '<div class="muted">' + emptyText + '</div>';
+    return '<table class="' + (tableClass || '') + '"><tbody>' + items.slice(0, 6).map(render).join('') + '</tbody></table>';
+  }
+
+  Admin.api.get('/admin/orders').then(function (d) {
+    document.getElementById('orders').innerHTML = list(d, function (o) {
+      return '<tr><td data-label="Order">' + Admin.esc(o.orderCode) + '<div class="muted">' + Admin.esc(o.customerName || '—') + '</div></td>' +
+        '<td data-label="Amount">' + Admin.money(o.amount) + '</td><td data-label="Status" class="right">' + Admin.statusBadge(o.orderStatus || o.paymentStatus) + '</td></tr>';
+    }, 'No orders yet.');
+  }).catch(function (e) { document.getElementById('orders').textContent = e.message; });
+
+  Admin.api.get('/payments').then(function (d) {
+    document.getElementById('payments').innerHTML = list(d, function (p) {
+      var transactionId = p.transactionId || ('#' + p.id);
+      return '<tr><td data-label="Transaction ID" class="payment-transaction" title="' + Admin.esc(transactionId) + '">' + Admin.esc(transactionId) + '</td>' +
+        '<td data-label="Payer" class="payment-payer">' + Admin.esc(p.payerName || '—') + '</td>' +
+        '<td data-label="Amount" class="payment-amount">' + Admin.money(p.amount, p.currency) + '</td>' +
+        '<td data-label="Status" class="right payment-status">' + Admin.statusBadge(p.status) + '</td></tr>';
+    }, 'No payments yet.', 'dashboard-payment-table');
+  }).catch(function () { document.getElementById('payments').textContent = 'Unable to load payments.'; });
+
+  Admin.api.get('/reviews').then(function (d) {
+    var pending = (d || []).filter(function (r) { return !r.approved; });
+    document.getElementById('reviews').innerHTML = list(pending, function (r) {
+      return '<tr><td data-label="Reviewer">' + Admin.esc(r.reviewerName) + '<div class="muted">' + Admin.esc((r.comment || '').slice(0, 60)) + '…</div></td>' +
+        '<td data-label="Rating" class="right">' + Admin.esc(r.rating) + '★</td></tr>';
+    }, 'Nothing pending. 🎉');
+  }).catch(function (e) { document.getElementById('reviews').textContent = e.message; });
+})();
+</script>
+</body>
+</html>

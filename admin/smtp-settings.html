@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Email / SMTP Settings — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+<style>
+  .ss-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); align-items: start; }
+  @media (max-width: 900px) { .ss-grid { grid-template-columns: 1fr; } }
+  .ss-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .ss-card h3 { margin: 0 0 4px; font-size: 16px; }
+  .ss-card .muted { margin-bottom: 16px; display: block; }
+  .ss-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .ss-row > .field { flex: 1 1 220px; }
+  .ss-row > .field.narrow { flex: 0 1 130px; }
+  .ss-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+  .ss-test { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .ss-test-actions { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .ss-test-actions .field { flex: 1 1 280px; }
+  .ss-result { min-height: 20px; margin-top: 10px; font-size: 14px; font-weight: 600; }
+  .ss-result.ok { color: var(--ok); }
+  .ss-result.err { color: var(--danger); }
+  .ss-kv { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+  .ss-kv > span:last-child { text-align: right; overflow-wrap: anywhere; }
+  .ss-kv:last-child { border-bottom: 0; }
+  .field .err { color: var(--danger); font-size: 12px; display: none; margin-top: 4px; }
+  .field.has-err input, .field.has-err select { border-color: var(--danger); }
+  .field.has-err .err { display: block; }
+  .field .hint { color: var(--muted); font-size: 12px; display: block; margin-top: 4px; }
+  .ss-inline { display: flex; gap: 8px; }
+  .ss-inline input { flex: 1; min-width: 0; }
+  .ss-inline .btn { white-space: nowrap; }
+  .ss-banner { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; font-size: 14px; font-weight: 600; }
+  .ss-banner.ok { border-color: var(--ok); color: var(--ok); }
+  .ss-banner.warn { border-color: var(--warn); color: var(--warn); }
+  .ss-banner.err { border-color: var(--danger); color: var(--danger); }
+  .ss-email input { font-size: 16px; padding-top: 12px; padding-bottom: 12px; }
+  .ss-detect { font-size: 13px; margin: -4px 0 14px; min-height: 18px; }
+  .ss-detect.ok { color: var(--ok); }
+  .ss-detect.warn { color: var(--warn); }
+  .ss-detect.busy { color: var(--muted); }
+  .ss-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px;
+             border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 13px; }
+  .ss-auto span { color: var(--muted); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .ss-auto strong { overflow-wrap: anywhere; }
+  details.ss-more { border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; margin: 12px 0 0; }
+  details.ss-more > summary { cursor: pointer; padding: 11px 0; font-size: 14px; font-weight: 600; }
+  details.ss-more > summary small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+  details.ss-more[open] > summary { border-bottom: 1px dashed var(--line); margin-bottom: 12px; }
+  .ss-cred-saved { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .ss-help { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+  .ss-help li { margin-bottom: 4px; }
+  input[readonly] { opacity: .75; }
+  .ss-google { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 0 0 14px; background: var(--surface-2); }
+  .ss-google h4 { margin: 0 0 6px; font-size: 14px; }
+  .ss-google p { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+  .ss-google .ss-g-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .ss-google .ss-g-ok { color: var(--ok); font-weight: 600; font-size: 14px; }
+  .ss-google ol { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+  .ss-google ol li { margin-bottom: 3px; }
+  .ss-google code { font-size: 12px; overflow-wrap: anywhere; }
+  .ss-gbtn { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #1f1f1f; border: 1px solid #dadce0;
+             border-radius: 8px; padding: 9px 14px; font-weight: 600; cursor: pointer; font-size: 14px; }
+  .ss-gbtn:disabled { opacity: .6; cursor: default; }
+  .ss-gbtn svg { width: 18px; height: 18px; }
+  .ss-pwmsg { display: block; font-size: 12px; margin-top: 6px; min-height: 16px; }
+  .ss-pwmsg.ok { color: var(--ok); }
+  .ss-pwmsg.warn { color: var(--warn); }
+  .ss-pwmsg.info { color: var(--muted); }
+  .ss-link { background: none; border: 0; color: var(--info); cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline; }
+  /* The hidden attribute must win over the display rules above (.ss-cred-saved, .btn, ...). */
+  .ss-card [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+(function () {
+  var mount = Admin.renderShell('smtp-settings', 'Email / SMTP Settings');
+  if (!mount) return;
+  var esc = Admin.esc;
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var HOST_RE = /^[A-Za-z0-9.-]+$/;
+  var DOMAIN_RE = /^([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
+  var SELECTOR_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+  var state = null;          // last saved configuration (never contains a credential)
+  var providers = [];        // provider registry from the backend
+  var replacing = false;     // true while the credential input is open
+  var detectedFor = null;    // email address the SMTP details were last detected for
+  var detecting = null;      // in-flight detection promise
+  var detectTimer = null;
+  var google = null;         // "Connect Google Account" status from the backend (never a token)
+  var useAppPassword = false;
+
+  mount.innerHTML =
+    '<div class="ss-grid">' +
+      '<div class="ss-card">' +
+        '<h3>Email Configuration</h3>' +
+        '<span class="muted">Type the email address VITC should send from - the SMTP server details are found ' +
+          'automatically. Every VITC email (student login credentials, password-reset codes, test emails) is sent ' +
+          'through this account. The credential is encrypted on the server and never sent back to the browser.</span>' +
+        '<div id="banner" class="ss-banner" role="status">Loading…</div>' +
+        '<form id="ssForm" novalidate autocomplete="off">' +
+          '<div class="field ss-email" data-field="fromEmail"><label for="fromEmail">Email address to send from *</label>' +
+            '<input id="fromEmail" type="email" maxlength="200" placeholder="yourname@gmail.com" required>' +
+            '<small class="err"></small></div>' +
+          '<div id="detectMsg" class="ss-detect" role="status" aria-live="polite"></div>' +
+          '<div id="autoSummary" class="ss-auto" hidden></div>' +
+          '<div id="googleBox" class="ss-google" hidden>' +
+            '<div id="googleConnected" hidden>' +
+              '<h4>Google account connected</h4>' +
+              '<div class="ss-g-row"><span class="ss-g-ok" id="googleWho"></span>' +
+              '<button type="button" class="btn btn-sm btn-danger" id="googleDisconnectBtn">Disconnect</button></div>' +
+              '<p style="margin-top:8px">VITC emails are sent through Gmail with a send-only permission - no App Password is needed or stored.</p>' +
+            '</div>' +
+            '<div id="googleConnect" hidden>' +
+              '<h4>Connect Google Account <small class="muted" style="display:inline;font-weight:400">recommended - no App Password</small></h4>' +
+              '<p>Sign in with Google and press <strong>Allow</strong>. Google does the sign-in - VITC never sees your Google password, ' +
+                'and only gets permission to <em>send</em> email (it cannot read your mail).</p>' +
+              '<div class="ss-g-row"><button type="button" class="ss-gbtn" id="googleConnectBtn"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-16.6z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg><span>Connect Google Account</span></button>' +
+              '<span id="useAppPwWrap"><button type="button" class="ss-link" id="useAppPwBtn">Use an App Password instead</button></span></div>' +
+            '</div>' +
+            '<div id="googleSetup" hidden>' +
+              '<h4>Connect Google Account (no App Password)</h4>' +
+              '<p>Google sign-in is not set up on this server yet - use the App Password below, or set it up once:</p>' +
+              '<ol>' +
+                '<li>Google Cloud Console -> APIs &amp; Services: enable the <strong>Gmail API</strong>.</li>' +
+                '<li>OAuth consent screen: add the <code>gmail.send</code> scope and your Gmail address as a test user.</li>' +
+                '<li>Credentials -> Create OAuth client ID -> <strong>Web application</strong>, with this Authorized redirect URI: <code id="googleRedirect"></code></li>' +
+                '<li>Put <code id="googleMissing"></code> in <code>backend/.env</code> and restart the backend.</li>' +
+              '</ol>' +
+            '</div>' +
+          '</div>' +
+
+          '<div id="smtpCred">' +
+          '<div class="field" data-field="password"><label for="password" id="credLabel">SMTP Password</label>' +
+            '<div class="ss-cred-saved" id="credSaved" hidden>' +
+              '<span class="badge badge-ok" id="credStatus">🔒 Credential already configured</span>' +
+              '<button type="button" class="btn btn-sm" id="replaceBtn">Replace Credential</button>' +
+            '</div>' +
+            '<div id="credInput">' +
+              '<div class="ss-inline"><input id="password" type="password" maxlength="200" autocomplete="new-password" ' +
+                'spellcheck="false" placeholder="paste the credential">' +
+              '<button type="button" class="btn btn-sm" id="showPw" aria-pressed="false">Show</button>' +
+              '<button type="button" class="btn btn-sm" id="keepBtn" hidden>Keep saved</button>' +
+              '<button type="button" class="btn btn-sm btn-primary" id="getPwBtn" hidden title="Opens your provider\'s page to create the credential; it is pasted here automatically when you come back">&#8599; Auto-fill</button></div>' +
+              '<small class="ss-pwmsg" id="pwMsg" role="status" aria-live="polite"></small>' +
+            '</div>' +
+            '<small class="err"></small></div>' +
+          '<ul class="ss-help" id="credHelp"></ul>' +
+          '</div>' +
+
+          '<details class="ss-more" id="senderBox"><summary>Sender details <small>filled automatically</small></summary>' +
+            '<div class="ss-actions" style="margin:0 0 10px"><button type="button" class="btn btn-sm" id="autoFillBtn">&#8634; Auto-fill from email address</button>' +
+              '<small class="hint" style="margin:0">Fields you type yourself are never overwritten automatically.</small></div>' +
+            '<div class="ss-row">' +
+              '<div class="field" data-field="fromName"><label for="fromName">Sender Name</label>' +
+                '<input id="fromName" type="text" maxlength="150" placeholder="default: VITC sender name">' +
+                '<small class="hint">Display name in the From line (VITC default name).</small>' +
+                '<small class="err"></small></div>' +
+              '<div class="field" data-field="replyToEmail"><label for="replyToEmail">Reply-To Email</label>' +
+                '<input id="replyToEmail" type="email" maxlength="200" placeholder="support@yourdomain.com">' +
+                '<small class="hint">Where replies go - the sending address, unless you enter another.</small><small class="err"></small></div>' +
+            '</div>' +
+            '<div class="ss-row">' +
+              '<div class="field" data-field="sendingDomain"><label for="sendingDomain">Verified Sending Domain</label>' +
+                '<input id="sendingDomain" type="text" maxlength="190" placeholder="yourdomain.com">' +
+                '<small class="hint">The domain of the sending address, for your records.</small><small class="err"></small></div>' +
+              '<div class="field" data-field="dkimSelector"><label for="dkimSelector">DKIM Selector</label>' +
+                '<input id="dkimSelector" type="text" maxlength="100" placeholder="google">' +
+                '<small class="hint" id="dkimHint">Looked up in DNS for the sending domain. Signing is done by the provider, not by VITC.</small>' +
+                '<small class="err"></small></div>' +
+            '</div>' +
+          '</details>' +
+
+          '<details class="ss-more" id="serverBox"><summary>SMTP server details <small id="serverNote">filled automatically</small></summary>' +
+            '<div class="ss-row">' +
+              '<div class="field" data-field="provider"><label for="provider">Email Provider</label>' +
+                '<select id="provider"><option value="AUTO">Detect from email address</option></select>' +
+                '<small class="err"></small></div>' +
+              '<div class="field" data-field="security"><label for="security">Encryption / Security</label>' +
+                '<select id="security"><option value="STARTTLS">STARTTLS (port 587)</option>' +
+                '<option value="SSL_TLS">SSL/TLS (port 465)</option></select><small class="err"></small></div>' +
+            '</div>' +
+            '<div class="ss-row">' +
+              '<div class="field" data-field="host"><label for="host">SMTP Host</label>' +
+                '<input id="host" type="text" maxlength="200" placeholder="smtp.gmail.com">' +
+                '<small class="err"></small></div>' +
+              '<div class="field narrow" data-field="port"><label for="port">SMTP Port</label>' +
+                '<input id="port" type="number" min="1" max="65535" placeholder="587">' +
+                '<small class="err"></small></div>' +
+            '</div>' +
+            '<div class="field" data-field="username"><label for="username">SMTP Username</label>' +
+              '<input id="username" type="text" maxlength="200" placeholder="filled from the email address">' +
+              '<small class="hint" id="usernameHint"></small><small class="err"></small></div>' +
+          '</details>' +
+
+          '<div class="field checkline" style="margin-top:14px"><input type="checkbox" id="enabled" checked>' +
+            '<label for="enabled" style="margin:0">Send VITC emails through this configuration</label></div>' +
+          '<div class="ss-actions">' +
+            '<button class="btn btn-primary" type="submit" id="saveBtn">Save Configuration</button>' +
+            '<span id="saveResult" class="ss-result" role="status" aria-live="polite" style="margin:0"></span>' +
+          '</div>' +
+        '</form>' +
+        '<div class="ss-test">' +
+          '<h3>Test Email</h3>' +
+          '<span class="muted">Sends a real message with the <strong>saved</strong> configuration - save first.</span>' +
+          '<div class="ss-test-actions">' +
+            '<div class="field"><label for="testEmail">Test Recipient Email</label>' +
+              '<input id="testEmail" type="email" autocomplete="email" placeholder="you@example.com" required>' +
+            '</div>' +
+            '<button class="btn" type="button" id="testBtn">Send Test Email</button>' +
+          '</div>' +
+          '<div id="testResult" class="ss-result" role="status" aria-live="polite"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ss-card">' +
+        '<h3>Status</h3><span class="muted">Currently saved configuration.</span>' +
+        '<div id="statusBox">Loading…</div>' +
+      '</div>' +
+    '</div>';
+
+  var $ = function (id) { return mount.querySelector('#' + id); };
+
+  /* ------------------------------------------------------------ helpers */
+  function providerByCode(code) {
+    for (var i = 0; i < providers.length; i++) if (providers[i].code === code) return providers[i];
+    return null;
+  }
+  // Provider the form currently represents: the dropdown choice, else what was saved/detected.
+  function activeProvider() {
+    var sel = $('provider').value;
+    if (sel !== 'AUTO') return providerByCode(sel);
+    return providerByCode($('provider').getAttribute('data-detected') || (state && state.provider) || '');
+  }
+  function clearErrors() {
+    mount.querySelectorAll('.field').forEach(function (f) {
+      f.classList.remove('has-err');
+      var e = f.querySelector('.err');
+      if (e) e.textContent = '';
+    });
+  }
+  function showError(fieldName, message) {
+    var f = mount.querySelector('.field[data-field="' + fieldName + '"]');
+    if (!f) return;
+    f.classList.add('has-err');
+    var e = f.querySelector('.err');
+    if (e) e.textContent = message;
+    var box = f.closest('details');
+    if (box) box.open = true;   // never hide an error inside a collapsed section
+  }
+  function setResult(id, cls, text) {
+    var r = $(id);
+    r.className = 'ss-result' + (cls ? ' ' + cls : '');
+    r.textContent = text || '';
+  }
+  function setDetect(cls, text) {
+    var d = $('detectMsg');
+    d.className = 'ss-detect' + (cls ? ' ' + cls : '');
+    d.textContent = text || '';
+  }
+
+  /* Compact read-out of the automatically filled SMTP details. */
+  function renderSummary() {
+    var host = $('host').value.trim();
+    var box = $('autoSummary');
+    if (!host) { box.hidden = true; return; }
+    var p = activeProvider();
+    function item(k, v) { return '<div><span>' + k + '</span><strong>' + esc(v || '—') + '</strong></div>'; }
+    box.innerHTML =
+      item('Provider', p ? p.label : 'Custom') +
+      item('SMTP Host', host) +
+      item('Port', $('port').value) +
+      item('Security', $('security').value === 'SSL_TLS' ? 'SSL/TLS' : 'STARTTLS') +
+      item('Username', $('username').value.trim());
+    box.hidden = false;
+  }
+
+  /* Username follows the email address for providers whose username IS the address. */
+  function syncUsername() {
+    var p = activeProvider();
+    var follows = p && p.usernameRule === 'FULL_EMAIL' && p.code !== 'CUSTOM';
+    $('username').readOnly = !!follows;
+    $('usernameHint').textContent = follows
+      ? 'Automatically set to the email address for ' + p.label + '.'
+      : 'Usually the full email address.';
+    if (follows) $('username').value = $('fromEmail').value.trim().toLowerCase();
+  }
+
+  function renderCredential() {
+    var p = activeProvider();
+    var label = (p && p.credentialLabel) || 'SMTP Password';
+    var saved = hasValidCredential();
+    $('credLabel').textContent = label + (saved ? '' : ' *');
+    $('credStatus').textContent = '🔒 ' + (saved
+      ? (p && p.credentialStatusLabel) || state.credentialStatus || 'Credential already configured'
+      : '');
+    $('credSaved').hidden = !saved || replacing;
+    $('credInput').hidden = saved && !replacing;
+    $('keepBtn').hidden = !saved;
+    $('password').placeholder = p && p.credentialLength
+      ? 'paste the ' + p.credentialLength + '-character ' + label
+      : 'enter the ' + label.toLowerCase();
+    renderPwAutoFill();
+    var help = (p && p.instructions) || [];
+    $('credHelp').innerHTML = help.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+  }
+
+  /* Sender details are suggested by the backend from the email address (default sender name,
+     Reply-To = sending address, domain, and a DKIM selector found in real DNS). They only go into
+     empty or previously auto-filled fields - anything the admin typed is kept unless forced. */
+  var SENDER_FIELDS = { fromName: 'senderName', replyToEmail: 'replyToEmail', sendingDomain: 'sendingDomain', dkimSelector: 'dkimSelector' };
+  var prevEmail = '';        // address the current sender details were derived from
+  function domainOf(email) { var i = (email || '').lastIndexOf('@'); return i < 0 ? '' : email.slice(i + 1).toLowerCase(); }
+  function fillSender(r, force) {
+    if (!r) return;
+    // A value still equal to what was derived from the previous address "follows" the address,
+    // even after a save/reload; anything else was chosen by the admin and is kept.
+    var old = (prevEmail || '').toLowerCase();
+    var followsOld = {
+      fromName: $('fromName').value.trim() === (r.senderName || ''),
+      replyToEmail: !!old && $('replyToEmail').value.trim().toLowerCase() === old,
+      sendingDomain: !!old && $('sendingDomain').value.trim().toLowerCase() === domainOf(old)
+    };
+    followsOld.dkimSelector = followsOld.sendingDomain || $('dkimSelector').getAttribute('data-auto') === '1';
+    prevEmail = r.email || prevEmail;
+    Object.keys(SENDER_FIELDS).forEach(function (id) {
+      var el = $(id);
+      var v = r[SENDER_FIELDS[id]];
+      var auto = el.getAttribute('data-auto') === '1' || followsOld[id];
+      if (!v) {
+        if (force || auto) { el.value = ''; el.removeAttribute('data-auto'); }
+        return;
+      }
+      if (force || auto || !el.value.trim()) { el.value = v; el.setAttribute('data-auto', '1'); }
+    });
+    if (r.sendingDomain) {
+      $('dkimHint').textContent = r.dkimSelector
+        ? '✓ DKIM record found in DNS for ' + r.sendingDomain + ' (selector "' + r.dkimSelector + '").'
+        : 'No DKIM record found in DNS for the usual selectors of ' + r.sendingDomain + ' - enter the one your mail host gave you, or leave blank.';
+    }
+  }
+
+  /* Suggestions only (no SMTP fields touched) - used on page load and by the Auto-fill button. */
+  async function suggestSender(force) {
+    var email = $('fromEmail').value.trim();
+    if (!EMAIL_RE.test(email)) { if (force) showError('fromEmail', 'Enter the email address first'); return; }
+    try {
+      var r = await Admin.api.post('/admin/smtp-settings/detect-provider', {
+        email: email, provider: (state && state.provider) || 'AUTO'
+      });
+      fillSender(r, force);
+    } catch (e) { if (force) Admin.toast(e.message, 'err'); }
+  }
+
+  function isGmail() {
+    var p = activeProvider();
+    return !!(p && p.code === 'GMAIL');
+  }
+
+  /* Google option: offered for Gmail / Google Workspace addresses; while it is offered (and not
+     declined) the App Password field is hidden, and while connected no SMTP credential is needed. */
+  function renderGoogle() {
+    var g = google || {};
+    var connected = !!g.connected;
+    var savedSmtp = hasValidCredential();
+    $('googleBox').hidden = !(connected || isGmail());
+    $('googleConnected').hidden = !connected;
+    $('googleConnect').hidden = connected || !g.configured;
+    $('googleSetup').hidden = connected || !!g.configured;
+    if (connected) {
+      $('googleWho').textContent = '✓ ' + (g.email || 'Google account') +
+        (g.connectedAt ? ' · since ' + Admin.date(g.connectedAt) : '') + (g.connectedBy ? ' · by ' + g.connectedBy : '');
+    }
+    if (!g.configured) {
+      $('googleMissing').textContent = ((g.missing && g.missing.length) ? g.missing : ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']).join(' and ');
+      $('googleRedirect').textContent = g.redirectUri || 'http://localhost:8080/api/v1/public/email/google/callback';
+    }
+    var offerGoogle = isGmail() && !!g.configured && !connected;
+    $('smtpCred').hidden = connected || (offerGoogle && !useAppPassword && !savedSmtp);
+    $('useAppPwWrap').hidden = !(offerGoogle && !useAppPassword && !savedSmtp);
+  }
+
+  async function loadGoogle() {
+    try { google = await Admin.api.get('/admin/smtp-settings/google'); }
+    catch (e) { google = null; }
+  }
+
+  /* ---------------- App Password auto-fill ----------------
+     "Auto-fill" opens the provider's own credential page (Google App Passwords) in a new tab.
+     When the admin copies the new App Password there and comes back, it is read from the
+     clipboard and put into the field. Only text that looks like the provider's credential is
+     accepted; the clipboard is cleared afterwards. Nothing is stored in the browser. */
+  var pwWatchSince = 0;      // when the Google page was opened (0 = not waiting)
+  var PW_WATCH_MS = 15 * 60 * 1000;
+
+  function setPwMsg(cls, text) {
+    var m = $('pwMsg');
+    m.className = 'ss-pwmsg' + (cls ? ' ' + cls : '');
+    m.textContent = text || '';
+  }
+
+  function acceptCredential(text) {
+    var p = activeProvider();
+    var len = p && p.credentialLength;
+    var compact = String(text || '').replace(/\s+/g, '');
+    if (!len || !new RegExp('^[A-Za-z0-9]{' + len + '}$').test(compact)) return false;
+    $('password').value = compact;
+    var f = mount.querySelector('.field[data-field="password"]');
+    f.classList.remove('has-err');
+    f.querySelector('.err').textContent = '';
+    pwWatchSince = 0;
+    setPwMsg('ok', '✓ ' + ((p && p.credentialLabel) || 'Credential') + ' filled in. Click Save Configuration to store it securely.');
+    // Do not leave the password sitting in the clipboard.
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText('').catch(function () {}); } catch (e) { /* ignore */ }
+    return true;
+  }
+
+  async function fillFromClipboard(userAsked) {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      setPwMsg('warn', 'This browser does not let the page read the clipboard - click in the field and press Ctrl+V.');
+      return;
+    }
+    try {
+      var text = await navigator.clipboard.readText();
+      if (acceptCredential(text)) return;
+      setPwMsg(userAsked ? 'warn' : 'info', 'Waiting for the App Password - on the Google page create one (name it "VITC"), click Copy, then come back here.');
+    } catch (e) {
+      setPwMsg('warn', 'Clipboard access was not allowed - click in the field and press Ctrl+V to paste the App Password.');
+    }
+  }
+
+  function renderPwAutoFill() {
+    var p = activeProvider();
+    var url = p && p.credentialSetupUrl;
+    $('getPwBtn').hidden = !url;
+    if (url) $('getPwBtn').title = 'Opens ' + p.label + ' to create your ' + p.credentialLabel + '; it is pasted here automatically when you come back.';
+  }
+
+  /* A stored credential only counts when the server says it has the right shape (e.g. a real
+     16-character Google App Password) - an invalid one must be replaced, never "kept". */
+  function hasValidCredential() {
+    return !!(state && state.credentialConfigured && state.credentialReadable && state.credentialValid !== false);
+  }
+
+  function closeCredentialInput() {
+    replacing = false;
+    $('password').value = '';
+    $('password').type = 'password';
+    $('showPw').textContent = 'Show';
+    renderCredential();
+  }
+
+  function renderBanner(s) {
+    var b = $('banner');
+    if (!s || !s.configured) {
+      b.className = 'ss-banner warn';
+      b.textContent = 'No SMTP configuration configured';
+    } else if (s.googleConnected) {
+      if (google && !google.configured) {
+        b.className = 'ss-banner err';
+        b.textContent = 'A Google account is connected, but Google sign-in is no longer configured on the server (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).';
+      } else if (!s.enabled) {
+        b.className = 'ss-banner warn';
+        b.textContent = 'Google account connected but sending is disabled - VITC emails are not sent through it.';
+      } else {
+        b.className = 'ss-banner ok';
+        b.textContent = 'Email active · sending through connected Google account ' + (s.googleEmail || '') + ' · no App Password needed';
+      }
+    } else if (s.credentialReadable && s.credentialValid === false) {
+      b.className = 'ss-banner err';
+      b.textContent = 'The saved ' + ((activeProvider() || {}).credentialLabel || 'credential') + ' is not valid (it is not a ' +
+        (((activeProvider() || {}).credentialLength) || 16) + '-character App Password), so Gmail rejects it. Enter a new one below and save.';
+    } else if (!s.credentialReadable) {
+      b.className = 'ss-banner err';
+      b.textContent = 'The saved credential can no longer be decrypted - use Replace Credential and save again.';
+    } else if (!s.enabled) {
+      b.className = 'ss-banner warn';
+      b.textContent = 'SMTP configuration saved but disabled - VITC emails are not sent through it.';
+    } else {
+      b.className = 'ss-banner ok';
+      b.textContent = 'SMTP configuration active · ' + (s.credentialStatus || 'Credential already configured');
+    }
+  }
+
+  function render(s) {
+    state = s;
+    if (s.provider && providerByCode(s.provider)) {
+      $('provider').value = s.provider;
+      $('provider').setAttribute('data-detected', s.provider);
+    }
+    $('fromEmail').value = s.fromEmail || '';
+    $('fromName').value = s.fromName || '';
+    $('replyToEmail').value = s.replyToEmail || '';
+    $('sendingDomain').value = s.sendingDomain || '';
+    $('dkimSelector').value = s.dkimSelector || '';
+    Object.keys(SENDER_FIELDS).forEach(function (id) { $(id).removeAttribute('data-auto'); });
+    prevEmail = s.fromEmail || '';
+    $('security').value = s.security || 'STARTTLS';
+    $('host').value = s.host || '';
+    $('port').value = s.port || '';
+    $('username').value = s.username || '';
+    $('enabled').checked = s.enabled !== false;
+    detectedFor = s.fromEmail ? s.fromEmail.toLowerCase() : null;   // saved details already match this address
+    if (s.googleConnected) setDetect('ok', '✓ Sending through the connected Google account');
+    else if (s.configured) setDetect('ok', '✓ Using ' + (s.providerLabel || 'saved') + ' SMTP settings');
+    // The credential is never returned by the API - the input always starts empty.
+    replacing = !s.credentialConfigured || s.credentialValid === false || !s.credentialReadable;
+    $('password').value = '';
+    syncUsername();
+    renderCredential();
+    renderSummary();
+    renderGoogle();
+    renderBanner(s);
+    var status = !s.configured
+      ? '<span class="badge badge-warn">NOT CONFIGURED</span>'
+      : (s.active ? '<span class="badge badge-ok">ACTIVE</span>'
+        : '<span class="badge badge-muted">' + (s.googleConnected || s.credentialReadable ? 'DISABLED' : 'CREDENTIAL UNREADABLE') + '</span>');
+    function kv(k, v) { return '<div class="ss-kv"><span>' + k + '</span><span>' + v + '</span></div>'; }
+    $('statusBox').innerHTML =
+      kv('Status', status) +
+      kv('Method', s.googleConnected ? 'Google account (Gmail API)' : (s.configured ? 'SMTP' : '—')) +
+      (s.googleConnected ? kv('Google account', esc(s.googleEmail || '—')) : '') +
+      kv('Provider', esc(s.providerLabel || '—')) +
+      kv('Host', esc(s.host || '—')) +
+      kv('Port', esc(s.port != null ? String(s.port) : '—')) +
+      kv('Security', esc(s.security === 'SSL_TLS' ? 'SSL/TLS' : (s.security || '—'))) +
+      kv('Username', esc(s.username || '—')) +
+      kv('Credential', !s.credentialConfigured ? 'Not set'
+        : (s.credentialValid === false ? '<span class="badge badge-danger">INVALID - replace it</span>' : esc(s.credentialStatus || 'Configured'))) +
+      kv('From', esc((s.fromName || '—') + (s.fromEmail ? ' <' + s.fromEmail + '>' : ''))) +
+      kv('Reply-To', esc(s.replyToEmail || '—')) +
+      kv('Sending domain', esc(s.sendingDomain || '—')) +
+      kv('DKIM selector', esc(s.dkimSelector || '—')) +
+      kv('Updated', (s.updatedAt ? Admin.date(s.updatedAt) : '—') + (s.updatedBy ? ' · ' + esc(s.updatedBy) : ''));
+  }
+
+  /* ------------------------------------------------------------ automatic detection */
+  /* Asks the backend which provider hosts this address and fills every SMTP detail from its
+     provider registry. Runs by itself while typing / on leaving the field; the save button
+     also waits for it, so the admin never has to trigger it. */
+  function detect(force) {
+    var email = $('fromEmail').value.trim().toLowerCase();
+    if (!EMAIL_RE.test(email)) return Promise.resolve(false);
+    if (!force && email === detectedFor) return Promise.resolve(true);
+    if (detecting && detecting.email === email) return detecting.promise;
+    setDetect('busy', 'Finding the SMTP settings for ' + email + '…');
+    var promise = Admin.api.post('/admin/smtp-settings/detect-provider', {
+      email: email,
+      provider: $('provider').getAttribute('data-manual') ? $('provider').value : 'AUTO'
+    }).then(function (r) {
+      if ($('fromEmail').value.trim().toLowerCase() !== email) return false;   // typed on meanwhile
+      detectedFor = email;
+      $('provider').setAttribute('data-detected', r.provider);
+      $('provider').value = r.detected && r.provider !== 'CUSTOM' ? r.provider : ($('provider').getAttribute('data-manual') ? $('provider').value : 'AUTO');
+      if (r.host) {
+        $('host').value = r.host;
+        $('port').value = r.port || '';
+      } else {
+        // Clear details that were filled for a previous provider; keep anything typed by hand.
+        var current = $('host').value.trim().toLowerCase();
+        var autoFilled = providers.some(function (x) { return x.host && x.host === current; });
+        if (autoFilled) { $('host').value = ''; $('port').value = ''; }
+      }
+      if (r.security) $('security').value = r.security;
+      $('username').value = r.username || $('username').value;
+      syncUsername();
+      renderCredential();
+      renderSummary();
+      renderGoogle();
+      fillSender(r, false);
+      if (r.detected && r.host) {
+        setDetect('ok', '✓ ' + r.providerLabel + ' detected - SMTP server details filled automatically.');
+        $('serverNote').textContent = 'filled automatically';
+      } else {
+        setDetect('warn', r.message);
+        $('serverNote').textContent = 'enter these from your email host';
+        $('serverBox').open = true;
+      }
+      return !!r.host;
+    }).catch(function (e) {
+      setDetect('warn', e.message);
+      return false;
+    }).finally(function () {
+      if (detecting && detecting.email === email) detecting = null;
+    });
+    detecting = { email: email, promise: promise };
+    return promise;
+  }
+
+  $('fromEmail').addEventListener('input', function () {
+    clearTimeout(detectTimer);
+    syncUsername();
+    var email = this.value.trim();
+    if (!EMAIL_RE.test(email)) {
+      setDetect('', email ? 'Keep typing the full email address…' : '');
+      return;
+    }
+    detectTimer = setTimeout(function () { detect(false); }, 600);
+  });
+  $('fromEmail').addEventListener('blur', function () { clearTimeout(detectTimer); detect(false); });
+
+  /* ------------------------------------------------------------ validation */
+  function validate() {
+    clearErrors();
+    var ok = true;
+    var p = activeProvider();
+    var fromEmail = $('fromEmail').value.trim();
+    var port = $('port').value.trim();
+    var host = $('host').value.trim();
+    var replyTo = $('replyToEmail').value.trim();
+    var domain = $('sendingDomain').value.trim();
+    var selector = $('dkimSelector').value.trim();
+    var pw = $('password').value;
+
+    if (!fromEmail) { showError('fromEmail', 'Enter the email address to send from'); ok = false; }
+    else if (!EMAIL_RE.test(fromEmail)) { showError('fromEmail', 'Enter a valid email address'); ok = false; }
+    if (/[\r\n<>]/.test($('fromName').value)) { showError('fromName', 'Sender name cannot contain < or >'); ok = false; }
+    if (replyTo && !EMAIL_RE.test(replyTo)) { showError('replyToEmail', 'Enter a valid email address'); ok = false; }
+    if (domain && !DOMAIN_RE.test(domain)) { showError('sendingDomain', 'Enter a domain such as vitc.in'); ok = false; }
+    if (selector && !SELECTOR_RE.test(selector)) { showError('dkimSelector', 'Letters, digits, dot, underscore and hyphen only'); ok = false; }
+    if (!host) { showError('host', 'SMTP host is required for this email provider'); ok = false; }
+    else if (!HOST_RE.test(host)) { showError('host', 'Enter a host name such as smtp.gmail.com'); ok = false; }
+    if (!port) { showError('port', 'SMTP port is required'); ok = false; }
+    else if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+      showError('port', 'Port must be a number between 1 and 65535'); ok = false;
+    } else if ($('security').value === 'STARTTLS' && port === '465') {
+      showError('port', 'Port 465 needs SSL/TLS security'); ok = false;
+    } else if ($('security').value === 'SSL_TLS' && (port === '587' || port === '25')) {
+      showError('port', 'Port ' + port + ' needs STARTTLS security'); ok = false;
+    }
+    if (!$('username').value.trim()) { showError('username', 'SMTP username is required'); ok = false; }
+
+    var googleConnected = !!(google && google.connected);
+    if (!googleConnected && $('smtpCred').hidden) {
+      setResult('saveResult', 'err', 'Click Connect Google Account to finish, or choose "Use an App Password instead".');
+      return false;
+    }
+    var needsCredential = !hasValidCredential();
+    if (!googleConnected && (replacing || needsCredential)) {
+      var compact = pw.replace(/\s+/g, '');
+      var label = (p && p.credentialLabel) || 'SMTP password';
+      if (!compact) {
+        if (needsCredential) { showError('password', label + ' is required'); ok = false; }
+      } else if (p && p.credentialLength && p.code !== 'CUSTOM' && !new RegExp('^[A-Za-z0-9]{' + p.credentialLength + '}$').test(compact)) {
+        showError('password', label + ' must be exactly ' + p.credentialLength + ' letters (spaces are ignored)'); ok = false;
+      }
+    }
+    return ok;
+  }
+
+  /* ------------------------------------------------------------ actions */
+  async function loadProviders() {
+    try {
+      providers = await Admin.api.get('/admin/smtp-settings/providers') || [];
+    } catch (e) { providers = []; Admin.toast(e.message, 'err'); }
+    var sel = $('provider');
+    providers.forEach(function (p) {
+      var o = document.createElement('option');
+      o.value = p.code; o.textContent = p.label;
+      sel.appendChild(o);
+    });
+  }
+
+  async function load() {
+    try { render(await Admin.api.get('/admin/smtp-settings')); }
+    catch (e) {
+      $('statusBox').textContent = e.message;
+      $('banner').className = 'ss-banner err';
+      $('banner').textContent = e.message;
+      Admin.toast(e.message, 'err');
+    }
+  }
+
+  // Picking a provider by hand (e.g. Gmail for a Google Workspace address) re-fills the details.
+  $('provider').addEventListener('change', function () {
+    if (this.value === 'AUTO') this.removeAttribute('data-manual');
+    else { this.setAttribute('data-manual', '1'); this.setAttribute('data-detected', this.value); }
+    syncUsername();
+    renderCredential();
+    renderGoogle();
+    detect(true);
+  });
+  // Keep the port consistent with the chosen transport when it is still a standard port.
+  $('security').addEventListener('change', function () {
+    var port = $('port').value.trim();
+    if (this.value === 'SSL_TLS' && (port === '' || port === '587')) $('port').value = '465';
+    if (this.value === 'STARTTLS' && (port === '' || port === '465')) $('port').value = '587';
+    renderSummary();
+  });
+  ['host', 'port', 'username'].forEach(function (id) { $(id).addEventListener('input', renderSummary); });
+  $('replaceBtn').addEventListener('click', function () {
+    replacing = true;
+    renderCredential();
+    $('password').focus();
+  });
+  $('keepBtn').addEventListener('click', closeCredentialInput);
+  $('showPw').addEventListener('click', function () {
+    var show = $('password').type === 'password';
+    $('password').type = show ? 'text' : 'password';
+    this.textContent = show ? 'Hide' : 'Show';
+    this.setAttribute('aria-pressed', String(show));
+  });
+
+  $('ssForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    setResult('saveResult', '', '');
+    var btn = $('saveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      clearTimeout(detectTimer);
+      await detect(false);   // make sure the SMTP details belong to the address typed
+      if (!validate()) { Admin.toast('Please fix the highlighted fields', 'err'); return; }
+      var p = activeProvider();
+      // The credential is sent only when entered; a blank value keeps the saved one server side.
+      var credential = $('password').value.trim();
+      var saved = await Admin.api.put('/admin/smtp-settings', {
+        provider: p ? p.code : null,
+        fromEmail: $('fromEmail').value.trim(),
+        fromName: $('fromName').value.trim() || null,
+        replyToEmail: $('replyToEmail').value.trim() || null,
+        sendingDomain: $('sendingDomain').value.trim() || null,
+        dkimSelector: $('dkimSelector').value.trim() || null,
+        security: $('security').value,
+        host: $('host').value.trim(),
+        port: Number($('port').value.trim()),
+        username: $('username').value.trim(),
+        password: credential || null,
+        enabled: $('enabled').checked
+      });
+      credential = null;
+      $('password').value = '';
+      render(saved);
+      setResult('saveResult', 'ok', 'Email configuration saved successfully');
+      Admin.toast('Email configuration saved successfully', 'ok');
+    } catch (err) {
+      setResult('saveResult', 'err', err.message);
+      Admin.toast(err.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Configuration';
+    }
+  });
+
+  $('testBtn').addEventListener('click', async function () {
+    var input = $('testEmail');
+    var to = input.value.trim();
+    setResult('testResult', '', '');
+    if (!EMAIL_RE.test(to)) {
+      setResult('testResult', 'err', 'Email sending failed ❌ Enter a valid test recipient email address.');
+      input.focus();
+      return;
+    }
+    if (!state || !state.configured) {
+      setResult('testResult', 'err', 'Email sending failed ❌ Save the configuration first.');
+      return;
+    }
+    var btn = $('testBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      await Admin.api.post('/admin/smtp-settings/test', { to: to });
+      setResult('testResult', 'ok', 'Email sent successfully ✅ Check the inbox (and spam folder) of ' + to + '.');
+      Admin.toast('Email sent successfully ✅', 'ok');
+    } catch (err) {
+      setResult('testResult', 'err', 'Email sending failed ❌ ' + (err.message || 'Please verify the SMTP settings.'));
+      Admin.toast('Email sending failed ❌', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send Test Email';
+    }
+  });
+
+  Object.keys(SENDER_FIELDS).forEach(function (id) {
+    $(id).addEventListener('input', function () { this.removeAttribute('data-auto'); });   // typed = keep
+  });
+  $('autoFillBtn').addEventListener('click', async function () {
+    var btn = this;
+    btn.disabled = true;
+    await suggestSender(true);
+    btn.disabled = false;
+  });
+
+  /* A saved configuration with empty sender fields gets them filled in (saved on the next Save). */
+  function fillMissingSenderOnLoad() {
+    var missing = Object.keys(SENDER_FIELDS).some(function (id) { return !$(id).value.trim(); });
+    if (missing) return suggestSender(false);
+  }
+
+  $('getPwBtn').addEventListener('click', function () {
+    var p = activeProvider();
+    if (!p || !p.credentialSetupUrl || !/^https:\/\//.test(p.credentialSetupUrl)) return;
+    var email = $('fromEmail').value.trim();
+    // authuser pre-selects the right Google account when several are signed in.
+    var url = p.credentialSetupUrl + (EMAIL_RE.test(email) ? '?authuser=' + encodeURIComponent(email) : '');
+    window.open(url, '_blank', 'noopener');
+    pwWatchSince = Date.now();
+    setPwMsg('info', 'Google App Passwords opened in a new tab. Create one (name it "VITC"), click Copy, then come back to this tab - ' +
+      'it is pasted here automatically. If Google says the setting is not available, turn on 2-Step Verification first.');
+  });
+  // Coming back from the Google tab: read the copied App Password.
+  function onReturn() {
+    if (!pwWatchSince || document.hidden) return;
+    if (Date.now() - pwWatchSince > PW_WATCH_MS) { pwWatchSince = 0; return; }
+    if ($('password').value.trim()) return;
+    fillFromClipboard(false);
+  }
+  window.addEventListener('focus', onReturn);
+  document.addEventListener('visibilitychange', onReturn);
+  // Ctrl+V straight into the field: accept Google's "abcd efgh ijkl mnop" format as well.
+  $('password').addEventListener('paste', function (e) {
+    var text = (e.clipboardData || window.clipboardData).getData('text');
+    if (acceptCredential(text)) e.preventDefault();
+  });
+
+  $('useAppPwBtn').addEventListener('click', function () {
+    useAppPassword = true;
+    renderGoogle();
+    $('password').focus();
+  });
+
+  $('googleConnectBtn').addEventListener('click', async function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Opening Google…';
+    try {
+      var email = $('fromEmail').value.trim();
+      var r = await Admin.api.get('/admin/smtp-settings/google/connect' +
+        (EMAIL_RE.test(email) ? '?email=' + encodeURIComponent(email) : ''));
+      // Only ever navigate to Google's own sign-in page.
+      if (!r || !/^https:\/\/accounts\.google\.com\//.test(r.authorizationUrl || '')) throw new Error('Unexpected sign-in address');
+      window.location.assign(r.authorizationUrl);
+    } catch (e) {
+      Admin.toast(e.message, 'err');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Connect Google Account';
+    }
+  });
+
+  $('googleDisconnectBtn').addEventListener('click', function () {
+    Admin.openModal('Disconnect Google account',
+      '<p>VITC will stop sending through <strong>' + esc((google && google.email) || 'this Google account') + '</strong> ' +
+      'and its access is revoked at Google. A saved App Password configuration, if any, is used instead.</p>',
+      async function (modal, close) {
+        await Admin.api.post('/admin/smtp-settings/google/disconnect', {});
+        close();
+        Admin.toast('Google account disconnected', 'ok');
+        await loadGoogle();
+        await load();
+      }, 'Disconnect');
+  });
+
+  /* Result of the Google sign-in round trip (?google=...), shown once and removed from the URL. */
+  function showGoogleOutcome() {
+    var outcome = new URLSearchParams(window.location.search).get('google');
+    if (!outcome) return;
+    window.history.replaceState(null, '', window.location.pathname);
+    var messages = {
+      connected: ['ok', 'Google account connected ✓ VITC emails are now sent through Gmail.'],
+      denied: ['err', 'Google sign-in was cancelled - nothing was changed.'],
+      invalid_state: ['err', 'The Google sign-in link expired or was already used. Click Connect Google Account again.'],
+      invalid_callback: ['err', 'Google did not return an authorization. Click Connect Google Account again.'],
+      failed: ['err', 'Google sign-in could not be completed. Check the Google Cloud settings and try again.']
+    };
+    var m = messages[outcome];
+    if (m) { setResult('saveResult', m[0], m[1]); Admin.toast(m[1], m[0]); }
+  }
+
+  loadProviders().then(loadGoogle).then(load).then(showGoogleOutcome).then(fillMissingSenderOnLoad);
+})();
+</script>
+</body>
+</html>

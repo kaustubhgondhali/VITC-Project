@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><title>Orders | VITC Admin</title><link rel="stylesheet" href="assets/admin.css?v=p6"></head>
+<body><script src="assets/admin.js?v=p8"></script><script>
+Admin.crudPage({
+  key: 'orders', title: 'Manage Orders', singular: 'Order', endpoint: '/admin/orders', canCreate: false, canEdit: false, canDelete: false,
+  searchKeys: ['orderCode', 'orderType', 'customerName', 'email', 'phone', 'product', 'paymentStatus', 'orderStatus'],
+  labelOf: function (r) { return r.orderCode; },
+  columns: [
+    { label: 'Order', render: function (r) { return '<strong>' + Admin.esc(r.orderCode) + '</strong><div class="muted">' + Admin.date(r.createdAt) + '</div>'; } },
+    { label: 'Type', render: function (r) { return Admin.statusBadge(r.orderType); } },
+    { label: 'Customer', render: function (r) { return Admin.esc(r.customerName) + '<div class="muted">' + Admin.esc(r.email) + '</div>'; } },
+    { label: 'Product', render: function (r) { return Admin.esc(r.product || '—'); } },
+    { label: 'Amount', render: function (r) { return Admin.money(r.amount); } },
+    { label: 'Payment', render: function (r) { return Admin.statusBadge(r.paymentStatus); } },
+    { label: 'Order status', render: function (r) { return Admin.statusBadge(r.orderStatus); } }
+  ],
+  rowActions: [{ label: 'View', onClick: function (r) {
+    Admin.openModal('Order ' + r.orderCode,
+      '<div class="field"><label>Customer</label><div>' + Admin.esc(r.customerName) + ' · ' + Admin.esc(r.email) + ' · ' + Admin.esc(r.phone || '—') + '</div></div>' +
+      '<div class="field"><label>Product</label><div>' + Admin.esc(r.product || '—') + '</div></div>' +
+      '<div class="field"><label>Order type</label><div>' + Admin.esc(r.orderType) + '</div></div>' +
+      '<div class="field"><label>Amount</label><div>' + Admin.money(r.amount) + '</div></div>' +
+      '<div class="field"><label>Payment status</label><div>' + Admin.statusBadge(r.paymentStatus) + '</div></div>' +
+      '<div class="field"><label>Order status</label><div>' + Admin.statusBadge(r.orderStatus) + '</div></div>' +
+      '<div class="field"><label>Created</label><div>' + Admin.date(r.createdAt) + '</div></div>', function (m, close) { close(); }, 'Close');
+  }}]
+});
+</script></body></html>

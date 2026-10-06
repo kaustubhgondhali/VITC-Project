@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Internship Applications — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+var STATUSES = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'SELECTED', 'REJECTED'];
+
+function resumeLink(r) {
+  if (!r.resumeUrl) return '<span class="muted">—</span>';
+  return '<a href="' + Admin.esc(Admin.mediaUrl(r.resumeUrl)) + '" target="_blank" rel="noopener">Open resume ↗</a>';
+}
+
+Admin.crudPage({
+  key: 'internships',
+  title: 'Internship Applications',
+  singular: 'Internship application',
+  endpoint: '/internships',
+  canCreate: false,
+  canEdit: false,
+  searchKeys: ['fullName', 'email', 'phone', 'college', 'domain', 'duration', 'status'],
+  labelOf: function (r) { return 'application by ' + r.fullName; },
+  columns: [
+    { label: 'Applicant', render: function (r) {
+        return '<strong>' + Admin.esc(r.fullName) + '</strong><div class="muted">' + Admin.esc(r.email) + '</div>';
+      } },
+    { label: 'Phone', render: function (r) { return Admin.esc(r.phone || '—'); } },
+    { label: 'College', render: function (r) { return Admin.esc(r.college || '—'); } },
+    { label: 'Domain', render: function (r) { return Admin.esc(r.domain || '—'); } },
+    { label: 'Duration', render: function (r) { return Admin.esc(r.duration || '—'); } },
+    { label: 'Resume', render: resumeLink },
+    { label: 'Date', render: function (r) { return Admin.date(r.createdAt); } },
+    { label: 'Status', render: function (r) { return Admin.statusBadge(r.status); } }
+  ],
+  rowActions: [
+    { label: 'View', onClick: function (r) {
+        Admin.openModal('Application — ' + Admin.esc(r.fullName),
+          '<div class="field"><label>Applicant</label><div>' + Admin.esc(r.fullName) + ' · ' + Admin.esc(r.email) + ' · ' + Admin.esc(r.phone) + '</div></div>' +
+          '<div class="field"><label>College / Qualification</label><div>' + Admin.esc(r.college || '—') + '</div></div>' +
+          '<div class="field"><label>Domain / Skills</label><div>' + Admin.esc(r.domain || '—') + '</div></div>' +
+          '<div class="field"><label>Preferred duration</label><div>' + Admin.esc(r.duration || '—') + '</div></div>' +
+          '<div class="field"><label>Message</label><div>' + Admin.esc(r.message || '—') + '</div></div>' +
+          '<div class="field"><label>Resume</label><div>' + resumeLink(r) + '</div></div>' +
+          '<div class="field"><label>Applied on</label><div>' + Admin.date(r.createdAt) + '</div></div>' +
+          '<div class="field"><label>Status</label><div>' + Admin.statusBadge(r.status) + '</div></div>',
+          async function (m, close) { close(); }, 'Close');
+      } },
+    { label: 'Status', onClick: function (r, reload) {
+        Admin.openModal('Update status — ' + Admin.esc(r.fullName),
+          '<div class="field"><label for="st">Application status</label><select id="st">' +
+          STATUSES.map(function (s) { return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+          '</select></div>',
+          async function (m, close) {
+            await Admin.api.patch('/internships/' + r.id + '/status?status=' + encodeURIComponent(m.querySelector('#st').value), undefined);
+            Admin.toast('Status updated', 'ok');
+            close(); reload();
+          });
+      } }
+  ]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>FAQ — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'faq',
+  title: 'Manage FAQ',
+  singular: 'FAQ',
+  endpoint: '/faqs',
+  searchKeys: ['question', 'answer', 'category'],
+  labelOf: function (r) { return r.question; },
+  columns: [
+    { label: '#', render: function (r) { return Admin.esc(r.displayOrder); } },
+    { label: 'Question', key: 'question' },
+    { label: 'Answer', render: function (r) { return Admin.esc((r.answer || '').slice(0, 80)); } },
+    { label: 'Category', render: function (r) { return Admin.esc(r.category || '—'); } },
+    { label: 'Status', render: function (r) { return Admin.boolBadge(r.active, 'Active', 'Hidden'); } }
+  ],
+  rowActions: [{
+    label: function (r) { return r.active ? 'Hide' : 'Publish'; },
+    onClick: async function (r, reload) {
+      await Admin.api.patch('/faqs/' + r.id + '/active?active=' + (!r.active), undefined);
+      Admin.toast('Status updated', 'ok');
+      reload();
+    }
+  }],
+  fields: [
+    { name: 'question', label: 'Question', required: true },
+    { name: 'answer', label: 'Answer', type: 'textarea', required: true },
+    { name: 'category', label: 'Category', half: true, placeholder: 'Admissions' },
+    { name: 'displayOrder', label: 'Display order', type: 'number', min: 0, half: true, default: 0 },
+    { name: 'active', label: 'Active (visible on website)', type: 'checkbox', default: true }
+  ]
+});
+</script>
+</body>
+</html>

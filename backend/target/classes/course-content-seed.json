@@ -1,0 +1,109 @@
+{
+  "_comment": "Course curriculum (modules + video lessons) for the student learning portal. Seeded once per course code; existing rows are never overwritten. Replace the sample videoUrl values with your own unlisted YouTube / Vimeo links or protected file urls - they are only ever returned to an enrolled student.",
+  "courses": {
+    "JAVA": [
+      {
+        "title": "Java Fundamentals",
+        "description": "Syntax, variables and data types - the base of every Java program.",
+        "lessons": [
+          { "title": "Introduction to Java", "description": "What Java is, JDK vs JRE, and how the JVM runs your code.", "duration": "11:20", "videoUrl": "https://www.youtube.com/embed/eIrMbAQSU34" },
+          { "title": "Variables", "description": "Declaring variables, naming rules and scope.", "duration": "09:45", "videoUrl": "https://www.youtube.com/embed/so1iUWaLmKA" },
+          { "title": "Data Types", "description": "Primitives, wrappers and type conversion.", "duration": "12:40", "videoUrl": "https://www.youtube.com/embed/grEKMHGYyns" }
+        ]
+      },
+      {
+        "title": "Object Oriented Programming",
+        "description": "Model real problems with classes and objects.",
+        "lessons": [
+          { "title": "Classes", "description": "Fields, methods and constructors.", "duration": "14:05", "videoUrl": "https://www.youtube.com/embed/xk4_1vDrzzo" },
+          { "title": "Objects", "description": "Creating objects, references and the heap.", "duration": "10:30", "videoUrl": "https://www.youtube.com/embed/IUqKuGnasdU" },
+          { "title": "Inheritance", "description": "extends, super and method overriding.", "duration": "15:15", "videoUrl": "https://www.youtube.com/embed/9JpNY-XAseg" }
+        ]
+      },
+      {
+        "title": "Spring Boot",
+        "description": "Build production REST APIs backed by a database.",
+        "lessons": [
+          { "title": "Spring Boot Introduction", "description": "Starters, auto-configuration and project layout.", "duration": "13:50", "videoUrl": "https://www.youtube.com/embed/9SGDpanrc8U" },
+          { "title": "REST API", "description": "Controllers, DTOs and validation.", "duration": "18:20", "videoUrl": "https://www.youtube.com/embed/vtPkZShrvXQ" },
+          { "title": "Database with JPA", "description": "Entities, repositories and queries.", "duration": "16:40", "videoUrl": "https://www.youtube.com/embed/8SGI_XS5OPw" }
+        ]
+      }
+    ],
+    "FULLSTACK": [
+      {
+        "title": "Frontend Foundations",
+        "description": "HTML, CSS and responsive layout.",
+        "lessons": [
+          { "title": "HTML Essentials", "description": "Semantic structure and forms.", "duration": "12:10", "videoUrl": "https://www.youtube.com/embed/UB1O30fR-EE" },
+          { "title": "CSS Layout", "description": "Flexbox and grid in practice.", "duration": "15:30", "videoUrl": "https://www.youtube.com/embed/1Rs2ND1ryYc" },
+          { "title": "Responsive Design", "description": "Media queries and mobile-first thinking.", "duration": "11:05", "videoUrl": "https://www.youtube.com/embed/srvUrASNj0s" }
+        ]
+      },
+      {
+        "title": "JavaScript",
+        "description": "The language of the browser.",
+        "lessons": [
+          { "title": "JS Basics", "description": "Values, functions and control flow.", "duration": "14:20", "videoUrl": "https://www.youtube.com/embed/W6NZfCO5SIk" },
+          { "title": "DOM & Events", "description": "Reading and updating the page.", "duration": "13:15", "videoUrl": "https://www.youtube.com/embed/0ik6X4DJKCc" },
+          { "title": "Fetch & APIs", "description": "Talking to a REST backend.", "duration": "12:50", "videoUrl": "https://www.youtube.com/embed/cuEtnrL9-H0" }
+        ]
+      },
+      {
+        "title": "Backend & Deployment",
+        "description": "Serve data and ship the project.",
+        "lessons": [
+          { "title": "REST Concepts", "description": "Resources, verbs and status codes.", "duration": "10:40", "videoUrl": "https://www.youtube.com/embed/-MTSQjw5DrM" },
+          { "title": "Database Basics", "description": "Tables, keys and simple SQL.", "duration": "16:00", "videoUrl": "https://www.youtube.com/embed/7S_tz1z_5bA" },
+          { "title": "Going Live", "description": "Builds, environments and hosting.", "duration": "09:35", "videoUrl": "https://www.youtube.com/embed/nhBVL41-_Cw" }
+        ]
+      }
+    ],
+    "PROGRAMMING": [
+      {
+        "title": "Python Fundamentals",
+        "description": "Start writing Python from zero.",
+        "lessons": [
+          { "title": "Introduction to Python", "description": "Installing Python and running your first script.", "duration": "10:15", "videoUrl": "https://www.youtube.com/embed/kqtD5dpn9C8" },
+          { "title": "Variables & Types", "description": "Numbers, strings, lists and dicts.", "duration": "12:35", "videoUrl": "https://www.youtube.com/embed/khKv-8q7YmY" },
+          { "title": "Control Flow", "description": "if / for / while and comprehensions.", "duration": "13:05", "videoUrl": "https://www.youtube.com/embed/DZwmZ8Usvnk" }
+        ]
+      },
+      {
+        "title": "Functions & OOP",
+        "description": "Structure larger programs.",
+        "lessons": [
+          { "title": "Functions", "description": "Arguments, returns and scope.", "duration": "11:45", "videoUrl": "https://www.youtube.com/embed/9Os0o3wzS_I" },
+          { "title": "Classes & Objects", "description": "Building your own types.", "duration": "14:10", "videoUrl": "https://www.youtube.com/embed/ZDa-Z5JzLYM" },
+          { "title": "Modules & Packages", "description": "Reusing code across files.", "duration": "09:55", "videoUrl": "https://www.youtube.com/embed/CqvZ3vGoGs0" }
+        ]
+      }
+    ]
+  },
+  "default": [
+    {
+      "title": "Getting Started",
+      "description": "Course orientation, tools and how to study effectively.",
+      "lessons": [
+        { "title": "Course Introduction", "description": "What you will build and how the course is structured.", "duration": "08:30", "videoUrl": "https://www.youtube.com/embed/aircAruvnKk" },
+        { "title": "Tools & Setup", "description": "Install everything you need before module 2.", "duration": "10:10", "videoUrl": "https://www.youtube.com/embed/2OHy-sAmiTc" }
+      ]
+    },
+    {
+      "title": "Core Concepts",
+      "description": "The ideas the rest of the course builds on.",
+      "lessons": [
+        { "title": "Key Concepts - Part 1", "description": "Foundational theory with practical examples.", "duration": "13:20", "videoUrl": "https://www.youtube.com/embed/rfscVS0vtbw" },
+        { "title": "Key Concepts - Part 2", "description": "Applying the concepts to a small task.", "duration": "12:05", "videoUrl": "https://www.youtube.com/embed/8jLOx1hD3_o" }
+      ]
+    },
+    {
+      "title": "Project Work",
+      "description": "Build and present a portfolio project.",
+      "lessons": [
+        { "title": "Project Walkthrough", "description": "Requirements and planning.", "duration": "15:40", "videoUrl": "https://www.youtube.com/embed/PkZNo7MFNFg" },
+        { "title": "Final Review & Next Steps", "description": "Polishing, review and interview preparation.", "duration": "11:25", "videoUrl": "https://www.youtube.com/embed/Ke90Tje7VS0" }
+      ]
+    }
+  ]
+}

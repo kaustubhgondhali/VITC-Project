@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Reviews — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'reviews',
+  title: 'Manage Reviews',
+  singular: 'Review',
+  endpoint: '/reviews',
+  searchKeys: ['reviewerName', 'email', 'courseCode', 'courseTitle', 'comment'],
+  labelOf: function (r) { return 'review by ' + r.reviewerName; },
+  columns: [
+    { label: 'Reviewer', render: function (r) {
+        return (r.imageUrl ? '<img class="thumb" style="width:36px;height:36px;border-radius:50%;float:left;margin-right:10px" src="' + Admin.esc(Admin.mediaUrl(r.imageUrl)) + '" alt="">' : '') +
+          Admin.esc(r.reviewerName) + '<div class="muted">' + Admin.esc(r.email) + '</div>';
+      } },
+    { label: 'Course', render: function (r) { return Admin.esc(r.courseTitle || r.courseCode || '—'); } },
+    { label: 'Rating', render: function (r) { return Admin.esc(r.rating) + '★'; } },
+    { label: 'Comment', render: function (r) { return '<span title="' + Admin.esc(r.comment) + '">' + Admin.esc((r.comment || '').slice(0, 70)) + '</span>'; } },
+    { label: 'Approved', render: function (r) { return Admin.boolBadge(r.approved, 'Approved', 'Pending'); } },
+    { label: 'Featured', render: function (r) { return Admin.boolBadge(r.featured, 'Featured', '—'); } },
+    { label: 'Date', render: function (r) { return Admin.date(r.createdAt); } }
+  ],
+  rowActions: [
+    { label: function (r) { return r.approved ? 'Unapprove' : 'Approve'; },
+      onClick: async function (r, reload) {
+        await Admin.api.patch('/reviews/' + r.id + '/approval?approved=' + (!r.approved), undefined);
+        Admin.toast('Approval updated', 'ok');
+        reload();
+      } }
+  ],
+  fields: [
+    { name: 'reviewerName', label: 'Reviewer name', required: true, half: true },
+    { name: 'email', label: 'Email', type: 'email', required: true, half: true },
+    { name: 'courseCode', label: 'Course code', half: true },
+    { name: 'courseTitle', label: 'Course title', half: true },
+    { name: 'rating', label: 'Rating (1-5)', type: 'select', required: true,
+      options: ['1', '2', '3', '4', '5'], default: '5' },
+    { name: 'comment', label: 'Comment', type: 'textarea', required: true },
+    { name: 'imageUrl', label: 'Reviewer photo', type: 'image', folder: 'reviews' },
+    { name: 'approved', label: 'Approved', type: 'checkbox' },
+    { name: 'featured', label: 'Featured on homepage', type: 'checkbox' }
+  ],
+  toPayload: function (p) { p.rating = Number(p.rating); return p; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>/index.html</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+<url><loc>/about.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/courses.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/buy-course.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/course-java.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/assignments.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/assignment-details.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/gallery.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/success-stories.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/blog.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/career.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/internship.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/reviews.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/contact.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/payment.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>/blog.html?post=how-to-choose-your-first-it-career-path</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+<url><loc>/blog.html?post=python-vs-java-2026</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+<url><loc>/blog.html?post=ai-skills-every-fresher-should-learn</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+<url><loc>/blog.html?post=building-your-first-data-analytics-portfolio</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+<url><loc>/blog.html?post=seo-for-beginners-30-day-roadmap</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+<url><loc>/blog.html?post=resume-and-interview-tips-for-it-freshers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Admins — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'admins',
+  title: 'Manage Admins',
+  singular: 'Admin',
+  endpoint: '/admins',
+  canEdit: false,
+  createLabel: 'New admin',
+  searchKeys: ['username', 'email', 'fullName', 'role'],
+  labelOf: function (r) { return r.username; },
+  columns: [
+    { label: 'Username', render: function (r) { return '<strong>' + Admin.esc(r.username) + '</strong><div class="muted">' + Admin.esc(r.email) + '</div>'; } },
+    { label: 'Name', render: function (r) { return Admin.esc(r.fullName || '—'); } },
+    { label: 'Role', render: function (r) { return '<span class="badge badge-info">' + Admin.esc(r.role) + '</span>'; } },
+    { label: 'Status', render: function (r) { return Admin.boolBadge(r.active, 'Active', 'Disabled'); } },
+    { label: 'Last login', render: function (r) { return Admin.date(r.lastLoginAt); } }
+  ],
+  rowActions: [
+    { label: function (r) { return r.active ? 'Disable' : 'Enable'; },
+      onClick: async function (r, reload) {
+        await Admin.api.patch('/admins/' + r.id + '/active?active=' + (!r.active), undefined);
+        Admin.toast('Status updated', 'ok');
+        reload();
+      } },
+    { label: 'Edit', onClick: function (r, reload) {
+        Admin.openModal('Edit ' + r.username,
+          '<div class="field"><label for="e">Email</label><input id="e" type="email" value="' + Admin.esc(r.email) + '" required></div>' +
+          '<div class="field"><label for="n">Full name</label><input id="n" value="' + Admin.esc(r.fullName || '') + '" required></div>' +
+          '<div class="field"><label for="ro">Role</label><select id="ro">' +
+            ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'SUPPORT'].map(function (x) {
+              return '<option value="' + x + '"' + (x === r.role ? ' selected' : '') + '>' + x + '</option>';
+            }).join('') + '</select></div>' +
+          '<div class="field checkline"><input type="checkbox" id="ac"' + (r.active ? ' checked' : '') + '><label for="ac" style="margin:0">Active</label></div>',
+          async function (m, close) {
+            await Admin.api.put('/admins/' + r.id, {
+              email: m.querySelector('#e').value.trim(),
+              fullName: m.querySelector('#n').value.trim(),
+              role: m.querySelector('#ro').value,
+              active: m.querySelector('#ac').checked
+            });
+            Admin.toast('Updated successfully', 'ok');
+            close(); reload();
+          });
+      } },
+    { label: 'Password', onClick: function (r) {
+        Admin.openModal('Change password — ' + r.username,
+          '<div class="field"><label for="cp">Current password</label><input id="cp" type="password" required></div>' +
+          '<div class="field"><label for="np">New password</label><input id="np" type="password" required minlength="6"></div>',
+          async function (m, close) {
+            await Admin.api.patch('/admins/' + r.id + '/password', {
+              currentPassword: m.querySelector('#cp').value,
+              newPassword: m.querySelector('#np').value
+            });
+            Admin.toast('Password updated', 'ok');
+            close();
+          });
+      } }
+  ],
+  fields: [
+    { name: 'username', label: 'Username', required: true, half: true },
+    { name: 'email', label: 'Email', type: 'email', required: true, half: true },
+    { name: 'fullName', label: 'Full name', required: true, half: true },
+    { name: 'role', label: 'Role', type: 'select', required: true, half: true,
+      options: ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'SUPPORT'], default: 'ADMIN' },
+    { name: 'password', label: 'Password', type: 'password', required: true },
+    { name: 'active', label: 'Active', type: 'checkbox', default: true }
+  ]
+});
+</script>
+</body>
+</html>

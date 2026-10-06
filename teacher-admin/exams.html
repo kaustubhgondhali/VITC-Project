@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Exam Management — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  .ex-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .ex-notif { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--info); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px; }
+  .ex-notif-ico { font-size:20px; }
+  .ex-notif-title { font-weight:700; font-size:14px; margin-bottom:2px; }
+  .ex-notif-text { color:var(--muted); font-size:13px; margin:0; }
+  .ex-table { width:100%; border-collapse:collapse; font-size:14px; }
+  .ex-table-wrap { overflow-x:auto; }
+  .ex-table thead th { text-align:left; padding:10px 12px; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); }
+  .ex-table tbody td { padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .ex-table tbody tr:last-child td { border-bottom:0; }
+  .ex-table tbody tr:hover { background:rgba(255,255,255,.02); }
+  .ex-name { font-weight:700; }
+  .ex-sub { color:var(--muted); font-size:13px; margin-top:2px; }
+  @media (max-width:768px) {
+    .ex-table-wrap { overflow:visible; }
+    .ex-table thead { display:none; }
+    .ex-table, .ex-table tbody, .ex-table tr, .ex-table td { display:block; width:100%; }
+    .ex-table tr { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px; }
+    .ex-table td { border-bottom:0; padding:6px 0; }
+    .ex-table td[data-label]::before {
+      content: attr(data-label); display:block; font-size:11px; letter-spacing:.5px;
+      text-transform:uppercase; color:var(--muted); margin-bottom:2px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Exam Management</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">Teacher</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div id="examNotifications"></div>
+
+      <div class="card">
+        <div class="ex-bar">
+          <div>
+            <h3 style="margin:0 0 4px">Exam Applications & Schedule</h3>
+            <p class="muted" style="margin:0">Review student exam applications and schedule examinations for your assigned courses.</p>
+          </div>
+          <span class="muted" id="appCount"></span>
+        </div>
+        <div id="examApplicationsList" aria-live="polite" aria-busy="true">Loading exam applications…</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ Schedule Exam Modal ============ -->
+<div class="modal" id="scheduleModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="scheduleModalTitle">Schedule Student Exam</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    </div>
+    <form id="scheduleForm">
+      <div class="modal-body">
+        <div class="card" style="background:var(--surface-2);margin-bottom:16px;padding:12px 14px">
+          <div><strong id="schStudentName">…</strong> <span class="muted" id="schStudentEmail"></span></div>
+          <div class="muted" style="margin-top:4px" id="schCourseName">…</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="examDate">Exam Date<span class="req" aria-hidden="true">*</span></label>
+            <input id="examDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="examTime">Exam Time<span class="req" aria-hidden="true">*</span></label>
+            <input id="examTime" type="time" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="examMode">Exam Mode</label>
+          <select id="examMode">
+            <option value="Online">Online</option>
+            <option value="In-person (Classroom)">In-person (Classroom)</option>
+            <option value="Hybrid">Hybrid</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="examLocationOrLink">Location or Meeting Link</label>
+          <input id="examLocationOrLink" type="text" placeholder="e.g. Google Meet Link / Zoom Link / Classroom 101">
+        </div>
+        <div class="field">
+          <label for="examNotes">Instructions / Notes for Student</label>
+          <textarea id="examNotes" placeholder="e.g. Please join 10 minutes prior with your photo ID and webcam enabled."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary btn-sm" type="button" data-modal-close>Cancel</button>
+        <button class="btn btn-primary btn-sm" type="submit" id="saveScheduleBtn">Confirm & Schedule</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="assets/teacher.js"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("exams");
+
+  var whoName = document.getElementById("whoName");
+  var whoAvatar = document.getElementById("whoAvatar");
+  var session = Teacher.getSession();
+  if (session) {
+    if (whoName) whoName.textContent = session.fullName || session.username || "Teacher";
+    if (whoAvatar) whoAvatar.textContent = (session.fullName || session.username || "T").charAt(0).toUpperCase();
+  }
+
+  var logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", function () { Teacher.logout(); });
+
+  var notifHost = document.getElementById("examNotifications");
+  var listHost = document.getElementById("examApplicationsList");
+  var countHost = document.getElementById("appCount");
+  var modalController = Teacher.bindModal("scheduleModal");
+
+  var loadedApps = [];
+  var currentEnrollmentId = null;
+  var currentApp = null;
+
+  function esc(v) { return Teacher.esc(v); }
+  function fmtDate(v) {
+    if (!v) return "\u2014";
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function render(list) {
+    listHost.removeAttribute("aria-busy");
+    loadedApps = list || [];
+    var appliedList = loadedApps.filter(function (e) { return e.status === "APPLIED"; });
+
+    if (countHost) {
+      countHost.textContent = loadedApps.length + (loadedApps.length === 1 ? " record" : " records");
+    }
+
+    if (appliedList.length) {
+      notifHost.innerHTML = appliedList.map(function (e) {
+        return '<div class="ex-notif" role="status"><span class="ex-notif-ico" aria-hidden="true">🔔</span>' +
+          '<div><div class="ex-notif-title">New Exam Application</div>' +
+          '<p class="ex-notif-text"><b>' + esc(e.studentName) + '</b> has applied for the <b>' + esc(e.courseName) + '</b> exam.</p>' +
+          '</div></div>';
+      }).join("");
+    } else {
+      notifHost.innerHTML = "";
+    }
+
+    if (!loadedApps.length) {
+      listHost.innerHTML = '<div class="empty"><span class="ico" aria-hidden="true">📝</span>' +
+        '<h4>No exam applications yet</h4>' +
+        '<p>Student exam applications for your assigned courses will appear here.</p></div>';
+      return;
+    }
+
+    listHost.innerHTML = '<div class="ex-table-wrap"><table class="ex-table">' +
+      '<thead><tr><th>Student</th><th>Course</th><th>Application Date</th><th>Scheduled Exam</th><th>Status</th><th>Action</th></tr></thead>' +
+      '<tbody>' + loadedApps.map(function (e) {
+        var statusBadge = '<span class="badge badge-info">APPLIED</span>';
+        var actionBtn = '<button type="button" class="btn btn-primary btn-sm" data-schedule-id="' + esc(e.enrollmentId) + '">Schedule Exam</button>';
+
+        if (e.status === "SCHEDULED") {
+          statusBadge = '<span class="badge badge-ok">SCHEDULED</span>';
+          actionBtn = '<button type="button" class="btn btn-secondary btn-sm" data-schedule-id="' + esc(e.enrollmentId) + '">Update Schedule</button>';
+        } else if (e.status === "COMPLETED") {
+          statusBadge = '<span class="badge badge-muted">COMPLETED</span>';
+          actionBtn = '<span class="muted">Completed</span>';
+        } else if (e.status === "ELIGIBLE" || e.status === "READY_FOR_EXAM") {
+          statusBadge = '<span class="badge badge-warn">ELIGIBLE</span>';
+          actionBtn = '<button type="button" class="btn btn-primary btn-sm" data-schedule-id="' + esc(e.enrollmentId) + '">Schedule Exam</button>';
+        }
+
+        var appDate = e.appliedDate ? fmtDate(e.appliedDate) : (e.status === "APPLIED" ? fmtDate(e.completionDate) : "\u2014");
+        var scheduledInfo = e.status === "SCHEDULED" && e.examDate
+          ? fmtDate(e.examDate) + (e.examTime ? ' at ' + esc(e.examTime) : '') + '<div class="ex-sub">' + esc(e.mode || "") + '</div>'
+          : '<span class="muted">\u2014</span>';
+
+        return '<tr>' +
+          '<td data-label="Student"><div class="ex-name">' + esc(e.studentName) + '</div>' +
+            '<div class="ex-sub">' + esc(e.email) + (e.phone ? ' • ' + esc(e.phone) : '') + '</div></td>' +
+          '<td data-label="Course"><div><b>' + esc(e.courseName) + '</b></div>' +
+            '<div class="ex-sub">' + esc(e.courseCode) + '</div></td>' +
+          '<td data-label="Application Date">' + appDate + '</td>' +
+          '<td data-label="Scheduled Exam">' + scheduledInfo + '</td>' +
+          '<td data-label="Status">' + statusBadge + '</td>' +
+          '<td data-label="Action">' + actionBtn + '</td>' +
+          '</tr>';
+      }).join("") + '</tbody></table></div>';
+
+    // Bind schedule button clicks
+    listHost.querySelectorAll("[data-schedule-id]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = Number(btn.getAttribute("data-schedule-id"));
+        openScheduleModal(id);
+      });
+    });
+  }
+
+  function openScheduleModal(enrollmentId) {
+    currentEnrollmentId = enrollmentId;
+    currentApp = loadedApps.find(function (a) { return a.enrollmentId === enrollmentId; });
+    if (!currentApp) return;
+
+    document.getElementById("schStudentName").textContent = currentApp.studentName || "Student";
+    document.getElementById("schStudentEmail").textContent = currentApp.email ? "(" + currentApp.email + ")" : "";
+    document.getElementById("schCourseName").textContent = (currentApp.courseName || "") + (currentApp.courseCode ? " (" + currentApp.courseCode + ")" : "");
+
+    var dateInput = document.getElementById("examDate");
+    var todayStr = new Date().toISOString().split("T")[0];
+    dateInput.min = todayStr;
+    dateInput.value = currentApp.examDate || todayStr;
+
+    var timeInput = document.getElementById("examTime");
+    timeInput.value = currentApp.examTime ? currentApp.examTime.substring(0, 5) : "10:00";
+
+    var modeSelect = document.getElementById("examMode");
+    modeSelect.value = currentApp.mode || "Online";
+
+    var locInput = document.getElementById("examLocationOrLink");
+    locInput.value = currentApp.locationOrLink || "";
+
+    var notesInput = document.getElementById("examNotes");
+    notesInput.value = currentApp.notes || "";
+
+    modalController.open();
+  }
+
+  document.getElementById("scheduleForm").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    if (!currentEnrollmentId) return;
+
+    var dateVal = document.getElementById("examDate").value;
+    var timeVal = document.getElementById("examTime").value;
+    var modeVal = document.getElementById("examMode").value;
+    var locVal = document.getElementById("examLocationOrLink").value;
+    var notesVal = document.getElementById("examNotes").value;
+
+    if (!dateVal || !timeVal) {
+      Teacher.toast("Please specify both exam date and time.", "err");
+      return;
+    }
+
+    var submitBtn = document.getElementById("saveScheduleBtn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Scheduling…";
+
+    try {
+      await Teacher.api.post("/teacher/exams/" + currentEnrollmentId, {
+        examDate: dateVal,
+        examTime: timeVal.length === 5 ? timeVal + ":00" : timeVal,
+        mode: modeVal,
+        locationOrLink: locVal,
+        notes: notesVal
+      });
+
+      Teacher.toast("Exam scheduled successfully for " + (currentApp ? currentApp.studentName : "student") + "!", "ok");
+      modalController.close();
+      await loadData();
+    } catch (err) {
+      Teacher.toast(err.message || "Failed to schedule exam.", "err");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Confirm & Schedule";
+    }
+  });
+
+  async function loadData() {
+    try {
+      var data = await Teacher.api.get("/teacher/exam-ready-students");
+      render(data);
+    } catch (err) {
+      listHost.removeAttribute("aria-busy");
+      listHost.innerHTML = '<div class="empty empty-error"><p>' + esc(err.message) + '</p>' +
+        '<button type="button" class="btn btn-secondary btn-sm" id="retryBtn">Try again</button></div>';
+      var retry = document.getElementById("retryBtn");
+      if (retry) retry.addEventListener("click", loadData);
+    }
+  }
+
+  await loadData();
+})();
+</script>
+</body>
+</html>

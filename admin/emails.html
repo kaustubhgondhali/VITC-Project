@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Credential Emails — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+(function () {
+  var esc = Admin.esc;
+
+  var TYPE_LABEL = {
+    STUDENT_CREDENTIALS: 'CREDENTIALS',
+    COURSE_ADDED: 'COURSE ADDED',
+    ASSIGNMENT_ORDER_CONFIRMED: 'ASSIGNMENT ORDER',
+    ASSIGNMENT_DELIVERED: 'ASSIGNMENT DELIVERED'
+  };
+
+  async function retry(row, reload) {
+    var why = row.emailType === 'ASSIGNMENT_DELIVERED'
+      ? 'A NEW download link is generated and the previous one stops working, because links are never stored.'
+      : 'For a credentials email a NEW temporary password is generated, because the original one is never stored.';
+    if (!confirm('Resend this email?\n\n' + why)) return;
+    await Admin.api.post('/admin/emails/logs/' + row.id + '/retry', {});
+    Admin.toast('Retry attempted', 'ok');
+    reload();
+  }
+
+  async function test() {
+    Admin.openModal('Send test email',
+      '<div class="field"><label for="teTo">Send to *</label>'
+      + '<input id="teTo" type="email" required placeholder="you@example.com"></div>'
+      + '<p class="muted" style="font-size:12px">Uses the SMTP settings from the server environment '
+      + '(MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM).</p>',
+      async function (m, close) {
+        await Admin.api.post('/admin/emails/test', { to: m.querySelector('#teTo').value });
+        Admin.toast('Test email sent', 'ok');
+        close();
+      }, 'Send');
+  }
+
+  Admin.crudPage({
+    key: 'emails',
+    title: 'Credential Emails',
+    singular: 'Email',
+    endpoint: '/admin/emails/logs',
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    emptyText: 'No credential emails yet. They are sent automatically after a verified payment.',
+    searchKeys: ['recipientEmail', 'studentLoginId', 'orderCode', 'courseTitle', 'status', 'emailType'],
+    columns: [
+      { label: 'Student ID', render: function (r) { return '<code>' + esc(r.studentLoginId || '—') + '</code>'; } },
+      { label: 'Recipient', render: function (r) { return esc(r.recipientEmail || '—'); } },
+      { label: 'Type', render: function (r) {
+          return '<span class="badge badge-info">'
+            + esc(TYPE_LABEL[r.emailType] || r.emailType) + '</span>';
+        } },
+      { label: 'Course / assignment', render: function (r) { return esc(r.courseTitle || '—'); } },
+      { label: 'Order', render: function (r) { return '<code>' + esc(r.orderCode || '—') + '</code>'; } },
+      { label: 'Status', render: function (r) { return Admin.statusBadge(r.status); } },
+      { label: 'Retries', render: function (r) { return r.retryCount || 0; } },
+      { label: 'Sent / Failed', render: function (r) {
+          return r.status === 'SENT' ? Admin.date(r.sentAt) : Admin.date(r.failedAt);
+        } },
+      { label: 'Reason', render: function (r) {
+          return r.failureReason ? '<span class="muted">' + esc(r.failureReason) + '</span>' : '—';
+        } }
+    ],
+    rowActions: [
+      { label: 'Retry',
+        visible: function (r) { return r.status !== 'SENT'; },
+        onClick: function (r, reload) { return retry(r, reload); } }
+    ]
+  });
+
+  // Toolbar extra: SMTP smoke test (admin only, guarded by the admin session).
+  var toolbar = document.querySelector('.toolbar');
+  if (toolbar) {
+    var btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.type = 'button';
+    btn.textContent = 'Send test email';
+    btn.addEventListener('click', function () { test(); });
+    toolbar.appendChild(btn);
+  }
+})();
+</script>
+</body>
+</html>

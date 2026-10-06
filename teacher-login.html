@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Teacher Login — VITC</title>
+<link rel="stylesheet" href="admin/assets/admin.css?v=p5">
+<link rel="stylesheet" href="teacher-admin/assets/teacher.css?v=p5">
+</head>
+<body>
+<div class="login-wrap">
+  <form class="login-card" id="loginForm">
+    <div class="brand-badge"><span class="dot">V</span> VITC Teacher</div>
+    <h1>Sign in</h1>
+    <p class="sub">Use your teacher credentials to access the Teacher Admin panel.</p>
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input id="username" name="username" autocomplete="username" required placeholder="VITCteacher">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="pw-wrap">
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+        <button type="button" class="pw-toggle" data-target="password" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="submitBtn">Sign in</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" id="showTeacherForgot" style="color:var(--brand);font-weight:500">Forgot Password?</a>
+    </p>
+    <p class="muted mt-16" style="font-size:12.5px;margin-bottom:0">
+      This is a separate login from the Main Admin and Student portals.
+    </p>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px"><a class="btn btn-sm" href="index.html">← Back to Website</a></p>
+  </form>
+
+  <!-- ============ Forgot password — step 1: request OTP ============ -->
+  <form class="login-card" id="teacherRequestForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Teacher</div>
+    <h1>Forgot password</h1>
+    <p class="sub">Enter your teacher username, registered email, or phone to receive a 6-digit verification code.</p>
+
+    <div class="field">
+      <label for="teacherAccount">Username, email, or phone</label>
+      <input id="teacherAccount" required placeholder="VITCteacher or you@vitc.in">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="teacherRequestBtn">Send OTP</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToTeacherLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 2: verify OTP ============ -->
+  <form class="login-card" id="teacherVerifyOtpForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Teacher</div>
+    <h1>Verify OTP</h1>
+    <p class="sub" id="teacherVerifySub">A 6-digit verification code has been sent. Enter the code below.</p>
+
+    <div class="field">
+      <label for="teacherOtpCode">6-Digit Verification Code</label>
+      <input id="teacherOtpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="teacherVerifyOtpBtn">Verify OTP</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:13px">
+      <a href="#" class="backToTeacherLogin">Back to Login</a>
+      <button type="button" class="btn btn-sm" id="teacherResendOtpBtn" disabled>Resend OTP<span id="teacherResendTimer"> (60s)</span></button>
+    </div>
+  </form>
+
+  <!-- ============ Forgot password — step 3: set new password ============ -->
+  <form class="login-card" id="teacherResetForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Teacher</div>
+    <h1>Set a new password</h1>
+    <p class="sub" id="teacherResetSub">Choose a strong new password for your account.</p>
+
+    <div class="field">
+      <label for="teacherNewPassword">New password</label>
+      <div class="pw-wrap">
+        <input id="teacherNewPassword" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="teacherNewPassword" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="teacherConfirmPassword">Confirm new password</label>
+      <div class="pw-wrap">
+        <input id="teacherConfirmPassword" type="password" required minlength="8" placeholder="Repeat the password" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="teacherConfirmPassword" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="teacherResetBtn">Reset password</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToTeacherLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 4: success ============ -->
+  <div class="login-card" id="teacherSuccessCard" style="display:none;text-align:center">
+    <div class="brand-badge" style="justify-content:center"><span class="dot">✓</span> VITC Teacher</div>
+    <h1 style="color:var(--ok,#1fbf75)">Password Reset</h1>
+    <p class="sub" style="margin-bottom:20px">Your teacher password has been reset successfully. You can now log in with your new password.</p>
+    <button class="btn btn-primary btn-block backToTeacherLogin" type="button">Back to Sign In</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="teacher-admin/assets/teacher.js?v=p5"></script>
+<script>
+(function () {
+  var API_BASE = (window.localStorage.getItem("vitc_api") &&
+    /^https?:\/\//i.test(window.localStorage.getItem("vitc_api")))
+    ? window.localStorage.getItem("vitc_api").replace(/\/+$/, "").replace(/\/api(\/v1)?$/i, "")
+    : "http://localhost:8080";
+  var API = API_BASE + "/api/v1";
+
+  function toast(message, type) {
+    var host = document.getElementById("toasts");
+    var t = document.createElement("div");
+    t.className = "toast " + (type || "");
+    t.textContent = message;
+    host.appendChild(t);
+    setTimeout(function () { t.remove(); }, 4200);
+  }
+
+  /* Password show/hide toggle */
+  Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-target"));
+      if (!input) return;
+      var show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+      var lbl = (document.querySelector('label[for="' + input.id + '"]') || {}).textContent || "password";
+      lbl = lbl.replace(/\*/g, "").trim().toLowerCase();
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", (show ? "Hide " : "Show ") + lbl);
+    });
+  });
+
+  /* Card switching (login <-> forgot password wizard) */
+  var cards = {
+    login: document.getElementById("loginForm"),
+    request: document.getElementById("teacherRequestForm"),
+    verify: document.getElementById("teacherVerifyOtpForm"),
+    reset: document.getElementById("teacherResetForm"),
+    success: document.getElementById("teacherSuccessCard")
+  };
+  function showCard(name) {
+    Object.keys(cards).forEach(function (k) {
+      if (cards[k]) cards[k].style.display = k === name ? "" : "none";
+    });
+  }
+
+  var currentRecoveryToken = null;
+  var currentResetToken = null;
+  var resendInterval = null;
+
+  function stopResendTimer() {
+    if (resendInterval) {
+      clearInterval(resendInterval);
+      resendInterval = null;
+    }
+  }
+
+  function startResendTimer(seconds) {
+    stopResendTimer();
+    var remaining = typeof seconds === "number" && seconds > 0 ? seconds : 60;
+    var btn = document.getElementById("teacherResendOtpBtn");
+    var timerSpan = document.getElementById("teacherResendTimer");
+    btn.disabled = true;
+    timerSpan.textContent = " (" + remaining + "s)";
+    resendInterval = setInterval(function () {
+      remaining--;
+      if (remaining <= 0) {
+        stopResendTimer();
+        btn.disabled = false;
+        timerSpan.textContent = "";
+      } else {
+        timerSpan.textContent = " (" + remaining + "s)";
+      }
+    }, 1000);
+  }
+
+  function resetRecoveryState() {
+    stopResendTimer();
+    currentRecoveryToken = null;
+    currentResetToken = null;
+    document.getElementById("teacherRequestForm").reset();
+    document.getElementById("teacherVerifyOtpForm").reset();
+    document.getElementById("teacherResetForm").reset();
+  }
+
+  document.getElementById("showTeacherForgot").addEventListener("click", function (e) {
+    e.preventDefault();
+    resetRecoveryState();
+    showCard("request");
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".backToTeacherLogin"), function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      resetRecoveryState();
+      showCard("login");
+    });
+  });
+
+  /* Entering the login page always discards any leftover local session so
+     the panel can only be reached by explicitly signing in again. */
+  Teacher.clearSession();
+
+  /* Sign in */
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("submitBtn");
+    var username = document.getElementById("username").value.trim();
+    var password = document.getElementById("password").value;
+    if (!username || !password) {
+      toast("Please enter your registered email/ID.", "err");
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Signing in…";
+    try {
+      var res = await fetch(API + "/teacher/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username, password: password })
+      });
+      var json = await res.json();
+      if (!res.ok || !json || !json.data) {
+        throw new Error((json && json.message) || "Login failed");
+      }
+      Teacher.setSession(json.data);
+      location.href = "teacher-admin/index.html";
+    } catch (err) {
+      Teacher.clearSession();
+      toast(err.message, "err");
+      btn.disabled = false; btn.textContent = "Sign in";
+    }
+  });
+
+  /* Step 1: Request OTP */
+  document.getElementById("teacherRequestForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var account = document.getElementById("teacherAccount").value.trim();
+    if (!account) {
+      toast("Please enter your registered username, email, or phone.", "err");
+      return;
+    }
+    var btn = document.getElementById("teacherRequestBtn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      var res = await fetch(API + "/teacher/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernameOrEmail: account })
+      });
+      var json = await res.json();
+      if (!res.ok || !json || !json.data) {
+        throw new Error((json && json.message) || "Request failed");
+      }
+      currentRecoveryToken = json.data.recoveryToken;
+      showCard("verify");
+      document.getElementById("teacherOtpCode").value = "";
+      document.getElementById("teacherVerifySub").textContent =
+        "A 6-digit verification code has been sent to " + (json.data.targetMasked || "your registered contact") +
+        ". It expires in " + (json.data.expiresInMinutes || 5) + " minutes.";
+      startResendTimer(json.data.cooldownSeconds || 60);
+      toast("Verification OTP sent.", "ok");
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Send OTP";
+    }
+  });
+
+  /* Step 2: Verify OTP */
+  document.getElementById("teacherVerifyOtpForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var otp = document.getElementById("teacherOtpCode").value.trim();
+    if (!/^\d{6}$/.test(otp)) {
+      toast("Please enter a valid 6-digit numeric OTP.", "err");
+      return;
+    }
+    if (!currentRecoveryToken) {
+      toast("Recovery session expired. Please request a new OTP.", "err");
+      showCard("request");
+      return;
+    }
+    var btn = document.getElementById("teacherVerifyOtpBtn");
+    btn.disabled = true; btn.textContent = "Verifying…";
+    try {
+      var res = await fetch(API + "/teacher/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recoveryToken: currentRecoveryToken,
+          otp: otp
+        })
+      });
+      var json = await res.json();
+      if (!res.ok || !json || !json.data) {
+        throw new Error((json && json.message) || "OTP verification failed");
+      }
+      currentResetToken = json.data.resetToken;
+      stopResendTimer();
+      showCard("reset");
+      toast("OTP verified successfully.", "ok");
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Verify OTP";
+    }
+  });
+
+  /* Step 2: Resend OTP */
+  document.getElementById("teacherResendOtpBtn").addEventListener("click", async function (e) {
+    e.preventDefault();
+    if (!currentRecoveryToken) {
+      toast("Please enter your account details first.", "err");
+      showCard("request");
+      return;
+    }
+    var btn = document.getElementById("teacherResendOtpBtn");
+    btn.disabled = true;
+    try {
+      var res = await fetch(API + "/teacher/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recoveryToken: currentRecoveryToken
+        })
+      });
+      var json = await res.json();
+      if (!res.ok || !json || !json.data) {
+        throw new Error((json && json.message) || "Failed to resend OTP");
+      }
+      startResendTimer(json.data.cooldownSeconds || 60);
+      if (json.data.targetMasked) {
+        document.getElementById("teacherVerifySub").textContent =
+          "A 6-digit verification code has been sent to " + json.data.targetMasked +
+          ". It expires in " + (json.data.expiresInMinutes || 5) + " minutes.";
+      }
+      toast("A new OTP has been sent.", "ok");
+    } catch (err) {
+      toast(err.message, "err");
+      btn.disabled = false;
+    }
+  });
+
+  /* Step 3: Set New Password */
+  document.getElementById("teacherResetForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (!currentResetToken) {
+      toast("Please verify your OTP first.", "err");
+      showCard("request");
+      return;
+    }
+    var pw = document.getElementById("teacherNewPassword").value;
+    var confirm = document.getElementById("teacherConfirmPassword").value;
+    if (!pw || pw.length < 8) {
+      toast("Password must be at least 8 characters.", "err");
+      return;
+    }
+    if (pw !== confirm) {
+      toast("Passwords do not match.", "err");
+      return;
+    }
+    var btn = document.getElementById("teacherResetBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      var res = await fetch(API + "/teacher/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resetToken: currentResetToken,
+          newPassword: pw,
+          confirmPassword: confirm
+        })
+      });
+      var json = await res.json();
+      if (!res.ok) {
+        throw new Error((json && json.message) || "Password reset failed");
+      }
+      Teacher.clearSession();
+      showCard("success");
+      toast("Password reset successfully. You can now log in with your new password.", "ok");
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Reset password";
+    }
+  });
+})();
+</script>
+</body>
+</html>

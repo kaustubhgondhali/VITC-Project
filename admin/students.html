@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Students — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+<style>
+  .sd-kv { display:flex; gap:12px; padding:7px 0; border-bottom:1px dashed var(--line); font-size:14px; }
+  .sd-kv:last-child { border-bottom:0; }
+  .sd-kv b { min-width:150px; display:inline-block; font-weight:600; }
+  .sd-course { border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; }
+  .sd-bar { height:8px; border-radius:6px; background:var(--surface-2); overflow:hidden; margin-top:6px; }
+  .sd-bar > span { display:block; height:100%; background:#2563eb; }
+  .sd-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+</style>
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+(function () {
+  var esc = Admin.esc;
+
+  function pct(v) { return (v === null || v === undefined ? 0 : v) + '%'; }
+
+  function courseBlock(c) {
+    return '<div class="sd-course">' +
+      '<div class="sd-head"><strong>' + esc(c.courseTitle) + '</strong>' +
+      Admin.statusBadge(c.status) + '</div>' +
+      '<div class="muted" style="font-size:12px;margin-top:2px">' +
+        esc(c.courseCode || '') +
+        (c.manuallyGranted ? ' · <span class="badge badge-info">MANUALLY GRANTED (not paid)</span>' : '') +
+      '</div>' +
+      '<div class="sd-bar"><span style="width:' + pct(c.progressPercentage) + '"></span></div>' +
+      '<div class="muted" style="font-size:12px;margin-top:4px">' +
+        esc(c.courseTitle) + ' — ' + pct(c.progressPercentage) +
+        ' (' + c.completedLessons + '/' + c.totalLessons + ' lessons)' +
+      '</div></div>';
+  }
+
+  function detailHtml(d) {
+    var courses = (d.courses || []).length
+      ? d.courses.map(courseBlock).join('')
+      : '<div class="muted">No enrolments yet.</div>';
+    return '<div class="sd-kv"><b>Student ID</b><span>' + esc(d.studentLoginId || '—') + '</span></div>' +
+      '<div class="sd-kv"><b>Name</b><span>' + esc(d.fullName || '—') + '</span></div>' +
+      '<div class="sd-kv"><b>Email</b><span>' + esc(d.email || '—') + '</span></div>' +
+      '<div class="sd-kv"><b>Phone</b><span>' + esc(d.phone || '—') + '</span></div>' +
+      '<div class="sd-kv"><b>City</b><span>' + esc(d.city || '—') + '</span></div>' +
+      '<div class="sd-kv"><b>Status</b><span>' + Admin.statusBadge(d.status) + '</span></div>' +
+      '<div class="sd-kv"><b>Temp password in use</b><span>' + (d.mustChangePassword ? 'Yes' : 'No') + '</span></div>' +
+      '<div class="sd-kv"><b>Last login</b><span>' + Admin.date(d.lastLoginAt) + '</span></div>' +
+      '<div class="sd-kv"><b>Created</b><span>' + Admin.date(d.createdAt) + '</span></div>' +
+      '<h4 style="margin:16px 0 8px">Purchased courses &amp; progress</h4>' + courses +
+      '<div style="margin-top:14px"><button type="button" class="btn btn-sm" id="assignBtn">+ Assign course</button></div>';
+  }
+
+  async function assign(student, reload) {
+    var courses = await Admin.api.get('/courses');
+    var options = (courses || []).map(function (c) {
+      return '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+    }).join('');
+    Admin.openModal('Assign course to ' + (student.studentLoginId || student.fullName),
+      '<div class="field"><label for="acCourse">Course *</label><select id="acCourse" required>' + options + '</select></div>' +
+      '<div class="field"><label for="acReason">Reason (optional)</label>' +
+      '<input id="acReason" type="text" placeholder="e.g. complimentary access approved by management"></div>' +
+      '<p class="muted" style="font-size:12px">No order or payment is created. The enrolment is stored as ' +
+      '<strong>MANUALLY GRANTED</strong> so it stays distinguishable from a paid one.</p>',
+      async function (m, close) {
+        await Admin.api.post('/admin/students/' + student.id + '/enrollments', {
+          courseId: Number(m.querySelector('#acCourse').value),
+          reason: m.querySelector('#acReason').value || null
+        });
+        Admin.toast('Course access granted', 'ok');
+        close();
+        if (reload) reload();
+      }, 'Grant access');
+  }
+
+  async function view(row, reload) {
+    var d = await Admin.api.get('/admin/students/' + row.id);
+    var modal = Admin.openModal('Student Details', detailHtml(d),
+      async function (m, close) { close(); }, 'Close');
+    var btn = modal.querySelector('#assignBtn');
+    if (btn) btn.addEventListener('click', function () { assign(d, reload); });
+  }
+
+  Admin.crudPage({
+    key: 'students',
+    title: 'Students',
+    singular: 'Student',
+    endpoint: '/admin/students',
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    emptyText: 'No student accounts yet. Accounts are created automatically after a verified payment.',
+    searchKeys: ['studentLoginId', 'fullName', 'email', 'phone', 'status'],
+    columns: [
+      { label: 'Student ID', render: function (r) { return '<code>' + esc(r.studentLoginId || '—') + '</code>'; } },
+      { label: 'Name', render: function (r) { return esc(r.fullName || '—'); } },
+      { label: 'Email', render: function (r) { return esc(r.email || '—'); } },
+      { label: 'Phone', render: function (r) { return esc(r.phone || '—'); } },
+      { label: 'Purchased Courses', render: function (r) {
+          if (!r.purchasedCourses || !r.purchasedCourses.length) return '<span class="muted">—</span>';
+          return r.purchasedCourses.map(function (t) {
+            return '<span class="badge badge-info">' + esc(t) + '</span>';
+          }).join(' ');
+        } },
+      { label: 'Status', render: function (r) { return Admin.statusBadge(r.status); } },
+      { label: 'Created', render: function (r) { return Admin.date(r.createdAt); } }
+    ],
+    rowActions: [
+      { label: 'View', onClick: function (r, reload) { return view(r, reload); } },
+      { label: function (r) { return r.status === 'ACTIVE' ? 'Deactivate' : 'Activate'; },
+        onClick: async function (r, reload) {
+          var next = r.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+          await Admin.api.patch('/admin/students/' + r.id + '/status?status=' + next, undefined);
+          Admin.toast('Status updated', 'ok');
+          reload();
+        } },
+      { label: function (r) { return r.status === 'BLOCKED' ? 'Unblock' : 'Block'; }, className: 'btn-danger',
+        onClick: async function (r, reload) {
+          var next = r.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED';
+          await Admin.api.patch('/admin/students/' + r.id + '/status?status=' + next, undefined);
+          Admin.toast(next === 'BLOCKED' ? 'Student blocked — login is now denied' : 'Student unblocked', 'ok');
+          reload();
+        } }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Loads backend/.env (if present) before application.properties placeholders
+# such as ${MAIL_HOST:} are resolved. See DotenvEnvironmentPostProcessor for
+# why this is needed - plain Spring Boot does not read .env files on its own.
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.vitc.config.DotenvEnvironmentPostProcessor

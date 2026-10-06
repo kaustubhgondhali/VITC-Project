@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Course Content — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+<style>
+  .cc-bar { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px; }
+  .cc-bar .field { margin:0; min-width:260px; }
+  .cc-module { border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:14px; background:var(--surface); }
+  .cc-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  .cc-head h3 { margin:0; font-size:15px; }
+  .cc-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .cc-lesson { display:flex; justify-content:space-between; gap:12px; align-items:center;
+               padding:8px 0; border-top:1px dashed var(--line); flex-wrap:wrap; }
+  .cc-lesson .t { font-size:14px; }
+  .cc-inactive { opacity:.55; }
+</style>
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+(function () {
+  var mount = Admin.renderShell('course-content', 'Course Content');
+  if (!mount) return;
+  var esc = Admin.esc;
+  var courseId = null;
+
+  mount.innerHTML =
+    '<div class="cc-bar">' +
+      '<div class="field"><label for="courseSel">Select Course</label>' +
+        '<select id="courseSel"><option value="">Loading…</option></select></div>' +
+      '<button class="btn btn-primary" id="addModule" disabled>+ Add Module</button>' +
+      '<span class="muted" id="summary"></span>' +
+    '</div>' +
+    '<div id="tree"><div class="empty">Select a course to manage its modules and lessons.</div></div>';
+
+  var sel = mount.querySelector('#courseSel');
+  var tree = mount.querySelector('#tree');
+  var summary = mount.querySelector('#summary');
+
+  var moduleFields = [
+    { name: 'title', label: 'Title', required: true },
+    { name: 'description', label: 'Description', type: 'textarea' },
+    { name: 'displayOrder', label: 'Display Order', type: 'number', min: 1, half: true },
+    { name: 'active', label: 'Active', type: 'checkbox', default: true, half: true }
+  ];
+  var lessonFields = [
+    { name: 'title', label: 'Lesson Title', required: true },
+    { name: 'description', label: 'Description', type: 'textarea' },
+    { name: 'videoUrl', label: 'Video URL', placeholder: 'https://www.youtube.com/watch?v=… or /uploads/….mp4' },
+    { name: 'duration', label: 'Duration', placeholder: '15:30', half: true },
+    { name: 'displayOrder', label: 'Display Order', type: 'number', min: 1, half: true },
+    { name: 'active', label: 'Active', type: 'checkbox', default: true }
+  ];
+
+  function readFields(modal, fields) {
+    var payload = {};
+    fields.forEach(function (f) {
+      var input = modal.querySelector('[name="' + f.name + '"]');
+      if (!input) return;
+      if (f.type === 'checkbox') payload[f.name] = input.checked;
+      else if (f.type === 'number') payload[f.name] = input.value === '' ? null : Number(input.value);
+      else payload[f.name] = input.value === '' ? null : input.value;
+    });
+    return payload;
+  }
+
+  function formHtml(fields, record) {
+    var html = '';
+    fields.forEach(function (f) {
+      var v = record && record[f.name] !== undefined && record[f.name] !== null
+        ? record[f.name] : (f.default !== undefined ? f.default : '');
+      var id = 'f_' + f.name;
+      var input;
+      if (f.type === 'textarea') {
+        input = '<textarea id="' + id + '" name="' + f.name + '">' + esc(v) + '</textarea>';
+      } else if (f.type === 'checkbox') {
+        html += '<div class="field checkline"><input type="checkbox" id="' + id + '" name="' + f.name + '"' +
+          (v === true ? ' checked' : '') + '><label for="' + id + '" style="margin:0">' + esc(f.label) + '</label></div>';
+        return;
+      } else {
+        input = '<input type="' + (f.type || 'text') + '" id="' + id + '" name="' + f.name + '" value="' + esc(v) + '"' +
+          (f.required ? ' required' : '') + (f.min !== undefined ? ' min="' + f.min + '"' : '') +
+          (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + '>';
+      }
+      html += '<div class="field"><label for="' + id + '">' + esc(f.label) + (f.required ? ' *' : '') + '</label>' +
+        input + '</div>';
+    });
+    return html;
+  }
+
+  function moduleForm(record) {
+    Admin.openModal(record ? 'Edit Module' : 'Add Module', formHtml(moduleFields, record),
+      async function (m, close) {
+        var payload = readFields(m, moduleFields);
+        if (record) await Admin.api.put('/admin/modules/' + record.id, payload);
+        else await Admin.api.post('/admin/courses/' + courseId + '/modules', payload);
+        Admin.toast(record ? 'Module updated' : 'Module created', 'ok');
+        close();
+        load();
+      }, 'Save Module');
+  }
+
+  function lessonForm(moduleId, record) {
+    Admin.openModal(record ? 'Edit Lesson' : 'Add Lesson', formHtml(lessonFields, record),
+      async function (m, close) {
+        var payload = readFields(m, lessonFields);
+        if (record) await Admin.api.put('/admin/lessons/' + record.id, payload);
+        else await Admin.api.post('/admin/modules/' + moduleId + '/lessons', payload);
+        Admin.toast(record ? 'Lesson updated' : 'Lesson created', 'ok');
+        close();
+        load();
+      }, 'Save Lesson');
+  }
+
+  async function act(fn) {
+    try { await fn(); load(); } catch (e) { Admin.toast(e.message, 'err'); }
+  }
+
+  function render(data) {
+    summary.textContent = data.moduleCount + ' modules · ' + data.lessonCount + ' lessons';
+    if (!data.modules.length) {
+      tree.innerHTML = '<div class="empty">No modules yet. Use “Add Module” to create the first one.</div>';
+      return;
+    }
+    tree.innerHTML = data.modules.map(function (m, mi) {
+      var lessons = m.lessons.length ? m.lessons.map(function (l, li) {
+        return '<div class="cc-lesson' + (l.active ? '' : ' cc-inactive') + '">' +
+          '<div class="t">' + (li + 1) + '. ' + esc(l.title) +
+            (l.duration ? ' <span class="muted">· ' + esc(l.duration) + '</span>' : '') +
+             (l.videoUrl ? '' : ' <span class="badge badge-warn">no video</span>') +
+             (l.audioUrl ? ' <span class="badge">audio</span>' : '') +
+            (l.active ? '' : ' <span class="badge badge-muted">INACTIVE</span>') +
+          '</div>' +
+          '<div class="cc-actions">' +
+            '<button class="btn btn-sm" data-lup="' + l.id + '">↑</button>' +
+            '<button class="btn btn-sm" data-ldown="' + l.id + '">↓</button>' +
+            '<button class="btn btn-sm" data-ltoggle="' + l.id + '">' + (l.active ? 'Deactivate' : 'Activate') + '</button>' +
+            '<button class="btn btn-sm" data-ledit="' + l.id + '">Edit</button>' +
+             '<label class="btn btn-sm" style="cursor:pointer">Audio <input type="file" accept="audio/*" data-audio="' + l.id + '" hidden></label>' +
+            '<button class="btn btn-sm btn-danger" data-ldel="' + l.id + '">Delete</button>' +
+          '</div></div>';
+      }).join('') : '<div class="muted" style="padding-top:8px">No lessons yet.</div>';
+
+      return '<div class="cc-module' + (m.active ? '' : ' cc-inactive') + '">' +
+        '<div class="cc-head"><div>' +
+          '<h3>Module ' + (mi + 1) + ': ' + esc(m.title) +
+          (m.active ? '' : ' <span class="badge badge-muted">INACTIVE</span>') + '</h3>' +
+          (m.description ? '<div class="muted" style="font-size:12px">' + esc(m.description) + '</div>' : '') +
+        '</div><div class="cc-actions">' +
+          '<button class="btn btn-sm" data-mup="' + m.id + '">↑</button>' +
+          '<button class="btn btn-sm" data-mdown="' + m.id + '">↓</button>' +
+          '<button class="btn btn-sm" data-mtoggle="' + m.id + '">' + (m.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button class="btn btn-sm" data-medit="' + m.id + '">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" data-mdel="' + m.id + '">Delete</button>' +
+          '<button class="btn btn-sm btn-primary" data-ladd="' + m.id + '">+ Lesson</button>' +
+        '</div></div>' + lessons + '</div>';
+    }).join('');
+
+    var byId = {};
+    data.modules.forEach(function (m) {
+      byId['m' + m.id] = m;
+      m.lessons.forEach(function (l) { byId['l' + l.id] = l; });
+    });
+
+    function on(attr, handler) {
+      tree.querySelectorAll('[' + attr + ']').forEach(function (b) {
+        b.addEventListener('click', function () { handler(Number(b.getAttribute(attr))); });
+      });
+    }
+    on('data-mup', function (id) { act(function () { return Admin.api.patch('/admin/modules/' + id + '/move?direction=-1'); }); });
+    on('data-mdown', function (id) { act(function () { return Admin.api.patch('/admin/modules/' + id + '/move?direction=1'); }); });
+    on('data-medit', function (id) { moduleForm(byId['m' + id]); });
+    on('data-mtoggle', function (id) {
+      var m = byId['m' + id];
+      act(function () {
+        return Admin.api.put('/admin/modules/' + id, {
+          title: m.title, description: m.description, displayOrder: m.displayOrder, active: !m.active
+        });
+      });
+    });
+    on('data-mdel', function (id) {
+      var m = byId['m' + id];
+      Admin.confirmDelete('module “' + m.title + '” and all its lessons', async function () {
+        await Admin.api.del('/admin/modules/' + id);
+        Admin.toast('Module deleted', 'ok');
+        load();
+      });
+    });
+    on('data-ladd', function (id) { lessonForm(id, null); });
+    on('data-lup', function (id) { act(function () { return Admin.api.patch('/admin/lessons/' + id + '/move?direction=-1'); }); });
+    on('data-ldown', function (id) { act(function () { return Admin.api.patch('/admin/lessons/' + id + '/move?direction=1'); }); });
+    on('data-ledit', function (id) { lessonForm(byId['l' + id].moduleId, byId['l' + id]); });
+    tree.querySelectorAll('[data-audio]').forEach(function (input) {
+      input.addEventListener('change', async function () {
+        if (!input.files || !input.files[0]) return;
+        try {
+          var fd = new FormData();
+          fd.append('file', input.files[0]);
+          await Admin.api.put('/admin/lessons/' + input.getAttribute('data-audio') + '/audio', fd);
+          Admin.toast('Audio uploaded', 'ok');
+          load();
+        } catch (e) { Admin.toast(e.message, 'err'); }
+        input.value = '';
+      });
+    });
+    on('data-ltoggle', function (id) {
+      var l = byId['l' + id];
+      act(function () {
+        return Admin.api.put('/admin/lessons/' + id, {
+          title: l.title, description: l.description, videoUrl: l.videoUrl,
+          duration: l.duration, displayOrder: l.displayOrder, active: !l.active
+        });
+      });
+    });
+    on('data-ldel', function (id) {
+      var l = byId['l' + id];
+      Admin.confirmDelete('lesson “' + l.title + '”', async function () {
+        await Admin.api.del('/admin/lessons/' + id);
+        Admin.toast('Lesson deleted', 'ok');
+        load();
+      });
+    });
+  }
+
+  async function load() {
+    if (!courseId) return;
+    tree.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      render(await Admin.api.get('/admin/courses/' + courseId + '/content'));
+    } catch (e) {
+      tree.innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+      Admin.toast(e.message, 'err');
+    }
+  }
+
+  (async function init() {
+    try {
+      var courses = await Admin.api.get('/courses');
+      sel.innerHTML = '<option value="">— select —</option>' + (courses || []).map(function (c) {
+        return '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+      }).join('');
+    } catch (e) {
+      sel.innerHTML = '<option value="">' + esc(e.message) + '</option>';
+      return;
+    }
+    sel.addEventListener('change', function () {
+      courseId = sel.value ? Number(sel.value) : null;
+      mount.querySelector('#addModule').disabled = !courseId;
+      if (courseId) load();
+      else { tree.innerHTML = '<div class="empty">Select a course to manage its modules and lessons.</div>'; summary.textContent = ''; }
+    });
+    mount.querySelector('#addModule').addEventListener('click', function () { moduleForm(null); });
+  })();
+})();
+</script>
+</body>
+</html>

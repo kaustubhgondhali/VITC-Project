@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Profile — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  .pf-row { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px dashed var(--line); }
+  .pf-row:first-child { border-top:none; }
+  .pf-label { color:var(--muted); font-size:13px; }
+  .pf-value { font-weight:600; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Profile</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div class="card" style="max-width:480px">
+        <h3 style="margin:0 0 16px">My account</h3>
+        <div id="profileFields" aria-live="polite" aria-busy="true"></div>
+        <button class="btn btn-primary btn-sm" id="changePasswordBtn" style="margin-top:16px">Change Password</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="pwModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Change password</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    </div>
+    <form id="pwForm">
+      <div class="modal-body">
+        <p class="muted" style="margin-top:0">Enter your current password and choose a new one.</p>
+        <div class="field">
+          <label for="currentPassword">Current password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="currentPassword" type="password" required autocomplete="current-password">
+            <button type="button" class="pw-toggle" data-target="currentPassword" aria-pressed="false" aria-label="Show current password">Show</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="newPassword">New password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="newPassword" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="newPassword" aria-pressed="false" aria-label="Show new password">Show</button>
+          </div>
+        </div>
+        <div class="field" id="confirmPasswordField">
+          <label for="confirmPassword">Confirm new password<span class="req" aria-hidden="true">*</span></label>
+          <div class="pw-wrap">
+            <input id="confirmPassword" type="password" required minlength="8" placeholder="Repeat the password" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirmed password">Show</button>
+          </div>
+          <p class="field-error" id="confirmPasswordError"></p>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary btn-sm" type="button" id="pwCancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="pwSaveBtn">Save password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("profile");
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-target"));
+      if (!input) return;
+      var show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+      /* PART 1/2 accessibility: announce which field the toggle controls and its state. */
+      var lbl = (document.querySelector('label[for="' + input.id + '"]') || {}).textContent || "password";
+      lbl = lbl.replace(/\*/g, "").trim().toLowerCase();
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", (show ? "Hide " : "Show ") + lbl);
+    });
+  });
+
+  function field(label, value) {
+    return '<div class="pf-row"><div class="pf-label">' + label + '</div>' +
+      '<div class="pf-value">' + Teacher.esc(value || "—") + '</div></div>';
+  }
+
+  Teacher.skeleton(document.getElementById("profileFields"), { count: 4, rowClass: "t-skel-line w-90" });
+
+  function loadProfile() {
+    var host = document.getElementById("profileFields");
+    Teacher.api.get("/teacher/me").then(function (p) {
+      host.removeAttribute("aria-busy");
+      host.innerHTML =
+        field("Full name", p.fullName) +
+        field("Username", p.username) +
+        field("Email", p.email) +
+        field("Last login", p.lastLoginAt ? new Date(p.lastLoginAt).toLocaleString() : "—");
+    }).catch(function (e) {
+      Teacher.emptyState(host, { icon: "\u26A0\uFE0F", title: "Couldn't load your profile", error: true, retry: true, message: e.message });
+      var btn = host.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", loadProfile);
+    });
+  }
+  loadProfile();
+
+  var pwModal = Teacher.bindModal("pwModal", {
+    onClose: function () {
+      document.getElementById("pwForm").reset();
+      Teacher.fieldError(document.getElementById("confirmPasswordField"), document.getElementById("confirmPasswordError"), "");
+    }
+  });
+  function openPasswordModal() { pwModal.open(); }
+  function closePasswordModal() { pwModal.close(); }
+  document.getElementById("changePasswordBtn").addEventListener("click", openPasswordModal);
+  document.getElementById("pwCancelBtn").addEventListener("click", closePasswordModal);
+
+  document.getElementById("pwForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var newPw = document.getElementById("newPassword").value;
+    var confirmPw = document.getElementById("confirmPassword").value;
+    var confirmField = document.getElementById("confirmPasswordField");
+    var confirmErr = document.getElementById("confirmPasswordError");
+    if (newPw !== confirmPw) {
+      Teacher.fieldError(confirmField, confirmErr, "New password and confirmation do not match.");
+      Teacher.toast("New password and confirmation do not match.", "err");
+      return;
+    }
+    Teacher.fieldError(confirmField, confirmErr, "");
+    var btn = document.getElementById("pwSaveBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      var res = await Teacher.api.post("/teacher/auth/change-password", {
+        currentPassword: document.getElementById("currentPassword").value,
+        newPassword: newPw,
+        confirmPassword: confirmPw
+      });
+      Teacher.setSession({ sessionToken: res.sessionToken, mustChangePassword: false, teacher: res.teacher });
+      Teacher.toast("Password updated.", "ok");
+      closePasswordModal();
+    } catch (err) {
+      Teacher.toast(err.message, "err");
+    } finally {
+      btn.disabled = false; btn.textContent = "Save password";
+    }
+  });
+
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

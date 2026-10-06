@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Payments — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+var PAY_STATUS = ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'];
+var METHODS = ['UPI', 'CARD', 'NETBANKING', 'WALLET', 'CASH'];
+
+Admin.crudPage({
+  key: 'payments',
+  title: 'Manage Payments',
+  singular: 'Payment',
+  endpoint: '/payments',
+  canEdit: false,
+  createLabel: 'Record payment',
+  searchKeys: ['transactionId', 'payerName', 'email', 'status', 'method', 'referenceType'],
+  labelOf: function (r) { return r.transactionId || ('payment #' + r.id); },
+  columns: [
+    { label: 'Transaction', render: function (r) { return '<strong>' + Admin.esc(r.transactionId || ('#' + r.id)) + '</strong><div class="muted">' + Admin.date(r.createdAt) + '</div>'; } },
+    { label: 'Payer', render: function (r) { return Admin.esc(r.payerName) + '<div class="muted">' + Admin.esc(r.email) + '</div>'; } },
+    { label: 'For', render: function (r) { return Admin.esc(r.referenceType) + ' #' + Admin.esc(r.referenceId); } },
+    { label: 'Amount', render: function (r) { return Admin.money(r.amount); } },
+    { label: 'Method', render: function (r) { return '<span class="badge badge-info">' + Admin.esc(r.method) + '</span>'; } },
+    { label: 'Status', render: function (r) { return Admin.statusBadge(r.status); } }
+  ],
+  rowActions: [
+    { label: 'Status', onClick: function (r, reload) {
+        Admin.openModal('Update payment status',
+          '<div class="field"><label for="st">Payment status</label><select id="st">' +
+          PAY_STATUS.map(function (s) { return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+          '</select></div>',
+          async function (m, close) {
+            await Admin.api.patch('/payments/' + r.id + '/status', { status: m.querySelector('#st').value });
+            Admin.toast('Status updated', 'ok');
+            close(); reload();
+          });
+      } }
+  ],
+  fields: [
+    { name: 'referenceType', label: 'Reference type', type: 'select', required: true, half: true,
+      options: ['COURSE', 'ASSIGNMENT'] },
+    { name: 'referenceId', label: 'Reference id', type: 'number', min: 1, required: true, half: true },
+    { name: 'payerName', label: 'Payer name', required: true, half: true },
+    { name: 'email', label: 'Email', type: 'email', required: true, half: true },
+    { name: 'amount', label: 'Amount (₹)', type: 'number', step: '0.01', min: 1, required: true, half: true },
+    { name: 'method', label: 'Method', type: 'select', required: true, half: true, options: METHODS }
+  ]
+});
+</script>
+</body>
+</html>

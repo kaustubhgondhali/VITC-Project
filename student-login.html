@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d1117">
+<meta name="robots" content="noindex, nofollow">
+<title>Student Login — VITC</title>
+<meta name="description" content="Sign in to the VITC Student Portal with the Student ID and password issued after your course purchase.">
+<link rel="icon" type="image/jpeg" href="assets/img/logo.jpeg">
+<link rel="stylesheet" href="admin/assets/admin.css?v=p5">
+<style>
+  /* Student-login-only: message strip that fits the dark admin/teacher theme,
+     reusing the same aria-live #studentLoginMsg element assets/js/student.js
+     already writes into (dashboard/profile pages keep their own light-theme
+     .student-msg rule in assets/css/style.css - untouched). */
+  .login-card .student-msg{margin:0 0 16px;padding:10px 12px;border-radius:10px;font-size:13.5px;display:none}
+  .login-card .student-msg.error{display:block;background:rgba(244,84,79,.12);color:#ff8f8b;border:1px solid rgba(244,84,79,.35)}
+  .login-card .student-msg.ok{display:block;background:rgba(31,191,117,.12);color:#3fe39a;border:1px solid rgba(31,191,117,.35)}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <form class="login-card" id="studentLoginForm" novalidate>
+    <div class="brand-badge"><span class="dot">V</span> VITC Student</div>
+    <h1>Sign in</h1>
+    <p class="sub">Use your Student ID and password to access your Student Portal.</p>
+
+    <div id="studentLoginMsg" class="student-msg" role="status" aria-live="polite"></div>
+
+    <div class="field">
+      <label for="studentId">Student ID</label>
+      <input id="studentId" name="studentId" type="text" autocomplete="username" required placeholder="VITCSTU10001">
+    </div>
+    <div class="field">
+      <label for="studentPassword">Password</label>
+      <div class="pw-wrap">
+        <input id="studentPassword" name="studentPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+        <button type="button" class="pw-toggle" data-target="studentPassword" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="studentLoginBtn">Sign in</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" id="showStudentForgot" style="color:var(--brand);font-weight:500">Forgot Password?</a>
+    </p>
+    <p class="muted mt-16" style="font-size:12.5px;margin-bottom:0">
+      This is a separate login from the Main Admin and Teacher Admin portals.
+    </p>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px"><a class="btn btn-sm" href="index.html">← Back to Website</a></p>
+  </form>
+
+  <!-- ============ Forgot password — step 1: request OTP ============ -->
+  <form class="login-card" id="studentForgotForm" novalidate style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Student</div>
+    <h1>Forgot password</h1>
+    <p class="sub">Enter your Student ID, registered email, or phone to receive a 6-digit verification code.</p>
+
+    <div id="studentForgotMsg" class="student-msg" role="status" aria-live="polite"></div>
+
+    <div class="field">
+      <label for="studentForgotAccount">Student ID, email, or phone</label>
+      <input id="studentForgotAccount" required placeholder="VITCSTU10001 or you@example.com">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="studentForgotBtn">Send OTP</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToStudentLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 2: verify OTP ============ -->
+  <form class="login-card" id="studentVerifyOtpForm" novalidate style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Student</div>
+    <h1>Verify OTP</h1>
+    <p class="sub" id="studentVerifySub">A 6-digit verification code has been sent. Enter the code below.</p>
+
+    <div id="studentVerifyMsg" class="student-msg" role="status" aria-live="polite"></div>
+
+    <div class="field">
+      <label for="studentOtpCode">6-Digit Verification Code</label>
+      <input id="studentOtpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="studentVerifyBtn">Verify OTP</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:13px">
+      <a href="#" class="backToStudentLogin">Back to Login</a>
+      <button type="button" class="btn btn-sm" id="studentResendBtn" disabled>Resend OTP<span id="studentResendTimer"> (60s)</span></button>
+    </div>
+  </form>
+
+  <!-- ============ Forgot password — step 3: set new password ============ -->
+  <form class="login-card" id="studentResetForm" novalidate style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Student</div>
+    <h1>Set a new password</h1>
+    <p class="sub" id="studentResetSub">Choose a strong new password for your account.</p>
+
+    <div id="studentResetMsg" class="student-msg" role="status" aria-live="polite"></div>
+
+    <div class="field">
+      <label for="studentNewPassword">New password</label>
+      <div class="pw-wrap">
+        <input id="studentNewPassword" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="studentNewPassword" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="studentConfirmPassword">Confirm new password</label>
+      <div class="pw-wrap">
+        <input id="studentConfirmPassword" type="password" required minlength="8" placeholder="Repeat the password" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="studentConfirmPassword" aria-pressed="false" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="studentResetBtn">Reset password</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToStudentLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 4: success ============ -->
+  <div class="login-card" id="studentSuccessCard" style="display:none;text-align:center">
+    <div class="brand-badge" style="justify-content:center"><span class="dot">✓</span> VITC Student</div>
+    <h1 style="color:var(--ok,#1fbf75)">Password Reset</h1>
+    <p class="sub" style="margin-bottom:20px">Your student password has been reset successfully. You can now log in with your new password.</p>
+    <button class="btn btn-primary btn-block backToStudentLogin" type="button">Back to Sign In</button>
+  </div>
+</div>
+
+<script src="assets/js/student.js"></script>
+<script>
+(function () {
+  /* Password show/hide toggle - identical pattern to admin/index.html and
+     teacher-login.html, kept local to this page (not auth logic, so it does
+     not belong in assets/js/student.js). */
+  Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+    btn.addEventListener("click", function () {
+      var input = document.getElementById(btn.getAttribute("data-target"));
+      if (!input) return;
+      var show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+      var lbl = (document.querySelector('label[for="' + input.id + '"]') || {}).textContent || "password";
+      lbl = lbl.replace(/\*/g, "").trim().toLowerCase();
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", (show ? "Hide " : "Show ") + lbl);
+    });
+  });
+})();
+</script>
+</body>
+</html>

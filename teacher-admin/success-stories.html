@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Success Stories — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  /* PART 3/6 — Success Stories: a real <table> on desktop, stacked cards on narrow screens,
+     the same responsive pattern already used by students.html. */
+  .ss-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  .ss-bar select { padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;
+    background:var(--surface); color:var(--text); min-width:160px; }
+  .ss-search { position:relative; flex:1 1 220px; max-width:280px; }
+  .ss-search input { padding-left:34px; }
+  .ss-search::before { content:"\1F50D"; position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    font-size:12px; opacity:.55; pointer-events:none; }
+  .ss-count { color:var(--muted); font-size:13px; }
+  .ss-spacer { flex:1 1 auto; }
+
+  .ss-table { width:100%; min-width:0; border-collapse:collapse; font-size:14px; }
+  .ss-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .ss-table-wrap:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .ss-table thead th { text-align:left; padding:10px 12px; font-size:12px; letter-spacing:.6px;
+    text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--line); white-space:nowrap; }
+  .ss-table tbody td { padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .ss-table tbody tr:last-child td { border-bottom:0; }
+  .ss-table tbody tr:hover { background:rgba(255,255,255,.02); }
+  .ss-thumb { width:64px; height:44px; object-fit:cover; border-radius:8px; border:1px solid var(--line);
+    background:var(--surface-2); }
+  .ss-name { font-weight:700; }
+  .ss-designation { color:var(--muted); font-size:13px; margin-top:2px; }
+  .ss-video-link { font-size:13px; }
+  .ss-actions-cell { white-space:nowrap; }
+  .ss-actions-cell .btn { margin:2px 4px 2px 0; }
+  .ss-created { font-size:13px; color:var(--muted); white-space:nowrap; }
+
+  @media (max-width:900px) {
+    .ss-table-wrap { overflow:visible; background:none; border:0; }
+    .ss-table thead { display:none; }
+    .ss-table, .ss-table tbody, .ss-table tr, .ss-table td { display:block; width:100%; }
+    .ss-table tr { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:12px; }
+    .ss-table td { border-bottom:0; padding:6px 0; }
+    .ss-table td[data-label]::before {
+      content: attr(data-label); display:block; font-size:11px; letter-spacing:.5px;
+      text-transform:uppercase; color:var(--muted); margin-bottom:2px;
+    }
+    .ss-bar { flex-direction:column; align-items:stretch; }
+    .ss-bar select, .ss-search { max-width:none; width:100%; }
+  }
+
+  /* ---- Add/Edit form ---- */
+  .ss-form-row { display:flex; gap:14px; flex-wrap:wrap; }
+  .ss-form-row .field { flex:1 1 220px; }
+  .ss-upload-box { border:1px dashed var(--line); border-radius:10px; padding:12px; }
+  .ss-upload-box .ss-file-name { font-size:12px; color:var(--muted); margin-top:6px; }
+  .ss-upload-preview { margin-top:10px; }
+  .ss-upload-preview img { width:100%; max-width:220px; border-radius:8px; border:1px solid var(--line); }
+  .ss-upload-preview video { width:100%; max-width:320px; max-height:200px; border-radius:8px;
+    border:1px solid var(--line); background:#000; }
+  .ss-progress-outer { height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden; margin-top:8px; }
+  .ss-progress-inner { height:100%; width:0%; background:var(--brand); transition:width .15s; }
+
+  /* ---- View modal ---- */
+  .ssv-row { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px dashed var(--line); }
+  .ssv-row:first-child { border-top:none; }
+  .ssv-label { color:var(--muted); font-size:13px; }
+  .ssv-value { font-weight:600; font-size:14px; text-align:right; max-width:60%; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Success Stories</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div class="card">
+        <div class="ss-bar">
+          <label for="categoryFilter" class="t-sr-only">Filter by category</label>
+          <select id="categoryFilter">
+            <option value="">All categories</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+          </select>
+          <label for="statusFilter" class="t-sr-only">Filter by status</label>
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+          </select>
+          <div class="ss-search">
+            <label class="t-sr-only" for="storySearch">Search by name or designation</label>
+            <input type="text" id="storySearch" placeholder="Search by name or designation…" autocomplete="off">
+          </div>
+          <span class="ss-count" id="countLabel"></span>
+          <span class="ss-spacer"></span>
+          <button class="btn btn-primary" id="addBtn">+ Add Video Review</button>
+        </div>
+        <div id="storiesList" aria-live="polite" aria-busy="true"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add / Edit modal -->
+<div class="modal" id="storyModal">
+  <div class="modal-card" style="max-width:720px">
+    <div class="modal-head">
+      <h3 id="storyModalTitle">Add Video Review</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    </div>
+    <form id="storyForm">
+      <div class="modal-body">
+        <div class="ss-form-row">
+          <div class="field" id="nameField">
+            <label for="ssName">Name<span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="ssName" maxlength="120" required>
+            <p class="field-error" id="ssNameError"></p>
+          </div>
+          <div class="field" id="categoryField">
+            <label for="ssCategory">Category<span class="req" aria-hidden="true">*</span></label>
+            <select id="ssCategory" required>
+              <option value="">Select category…</option>
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="parent">Parent</option>
+            </select>
+            <p class="field-error" id="ssCategoryError"></p>
+          </div>
+        </div>
+        <div class="ss-form-row">
+          <div class="field">
+            <label for="ssCourse">Course</label>
+            <select id="ssCourse"><option value="">— none —</option></select>
+          </div>
+          <div class="field">
+            <label for="ssDesignation">Designation</label>
+            <input type="text" id="ssDesignation" maxlength="150" placeholder="e.g. Java Full Stack Student, Batch 2026">
+          </div>
+        </div>
+        <div class="field">
+          <label for="ssDescription">Short Description</label>
+          <textarea id="ssDescription" rows="3" maxlength="500"></textarea>
+        </div>
+        <div class="ss-form-row">
+          <div class="field">
+            <label>Video<span class="req" aria-hidden="true">*</span></label>
+            <div class="ss-upload-box">
+              <input type="file" id="ssVideoFile" accept="video/*,.mp4,.webm,.mov,.avi,.mkv,.mpeg,.mpg,.m4v,.3gp,.flv,.ogv" style="display:none">
+              <button type="button" class="btn btn-secondary btn-sm" id="ssVideoChoose">Choose Video File</button>
+              <span class="ss-file-name" id="ssVideoFileName">No file selected</span>
+              <p class="muted" style="font-size:11px;margin:6px 0 0">MP4, WebM or MOV.</p>
+              <div class="ss-progress-outer" id="ssVideoProgressOuter" style="display:none">
+                <div class="ss-progress-inner" id="ssVideoProgressInner"></div>
+              </div>
+              <p class="ss-file-name" id="ssVideoStatus"></p>
+              <div class="ss-upload-preview" id="ssVideoPreview"></div>
+            </div>
+            <p class="field-error" id="ssVideoError"></p>
+          </div>
+          <div class="field">
+              <label>Thumbnail <span class="muted">(optional override)</span></label>
+            <div class="ss-upload-box">
+              <input type="file" id="ssThumbFile" accept="image/*" style="display:none">
+              <button type="button" class="btn btn-secondary btn-sm" id="ssThumbChoose">Choose Thumbnail Image</button>
+              <span class="ss-file-name" id="ssThumbFileName">No file selected</span>
+              <p class="ss-file-name" id="ssThumbStatus"></p>
+              <div class="ss-upload-preview" id="ssThumbPreview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="field" style="max-width:220px">
+          <label for="ssStatus">Status</label>
+          <select id="ssStatus">
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary btn-sm" type="button" id="ssCancelBtn">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="ssSaveBtn">Save Video Review</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View modal -->
+<div class="modal" id="viewModal">
+  <div class="modal-card" style="max-width:560px">
+    <div class="modal-head">
+      <h3>Video Review</h3>
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" type="button" id="viewCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("success-stories");
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+
+  var esc = Teacher.esc;
+  var listHost = document.getElementById("storiesList");
+  var countLabel = document.getElementById("countLabel");
+  var categoryFilter = document.getElementById("categoryFilter");
+  var statusFilter = document.getElementById("statusFilter");
+  var searchInput = document.getElementById("storySearch");
+
+  var allStories = [];
+  var allCourses = [];
+  var editingId = null;      /* null while adding, story id while editing */
+  var pendingVideoUrl = "";
+  var pendingThumbnailUrl = "";
+
+  /* ============================ list / filter / render ============================ */
+
+  function categoryLabel(c) {
+    var v = (c || "").toLowerCase();
+    return v ? v.charAt(0).toUpperCase() + v.slice(1) : "—";
+  }
+
+  function statusBadge(status) {
+    return status === "PUBLISHED"
+      ? '<span class="badge badge-ok">Published</span>'
+      : '<span class="badge badge-muted">Draft</span>';
+  }
+
+  function videoCell(s) {
+    if (!s.videoUrl) return '<span class="muted">No video</span>';
+    return '<button type="button" class="btn btn-secondary btn-sm ss-video-link" data-view="' + s.id + '">▶ Preview</button>';
+  }
+
+  function matches(s) {
+    var cat = categoryFilter.value;
+    if (cat && (s.category || "").toLowerCase() !== cat) return false;
+    var status = statusFilter.value;
+    if (status && s.status !== status) return false;
+    var q = searchInput.value.trim().toLowerCase();
+    if (!q) return true;
+    var hay = ((s.name || "") + " " + (s.designation || "")).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
+
+  function applyFilter() {
+    var filtered = allStories.filter(matches);
+    countLabel.textContent = filtered.length + " video review(s)";
+    renderRows(filtered);
+  }
+
+  function renderRows(list) {
+    if (!list.length) {
+      Teacher.emptyState(listHost, allStories.length
+        ? { icon: "\uD83D\uDD0D", title: "No matching video reviews", message: "No video reviews match your search or filters." }
+        : { icon: "\uD83C\uDFAC", title: "No video reviews yet",
+            message: "Use \u201c+ Add Video Review\u201d above to add the first student, teacher or parent story.",
+            actionHtml: '<button type="button" class="btn btn-secondary btn-sm" id="emptyAddBtn">+ Add Video Review</button>' });
+      var emptyAdd = listHost.querySelector("#emptyAddBtn");
+      if (emptyAdd) emptyAdd.addEventListener("click", function () { openForm(null); });
+      return;
+    }
+    listHost.innerHTML =
+      '<div class="table-wrap ss-table-wrap" tabindex="0" role="region" aria-label="Success stories"><table class="ss-table"><thead><tr>' +
+        '<th scope="col">Thumbnail</th><th scope="col">Name</th><th scope="col">Category</th><th scope="col">Course</th>' +
+        '<th scope="col">Video</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col"><span class="t-sr-only">Actions</span></th>' +
+      '</tr></thead><tbody>' +
+      list.map(function (s) {
+        var created = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : "—";
+        var thumb = s.thumbnailUrl
+          ? '<img class="ss-thumb" src="' + esc(Teacher.mediaUrl(s.thumbnailUrl)) + '" alt="">'
+          : '<div class="ss-thumb" aria-hidden="true"></div>';
+        return '' +
+          '<tr>' +
+            '<td data-label="Thumbnail">' + thumb + '</td>' +
+            '<td data-label="Name"><div class="ss-name">' + esc(s.name) + '</div>' +
+              (s.designation ? '<div class="ss-designation">' + esc(s.designation) + '</div>' : '') + '</td>' +
+            '<td data-label="Category">' + esc(categoryLabel(s.category)) + '</td>' +
+            '<td data-label="Course">' + esc(s.courseProgram || s.courseTitle || "—") + '</td>' +
+            '<td data-label="Video">' + videoCell(s) + '</td>' +
+            '<td data-label="Status">' + statusBadge(s.status) + '</td>' +
+            '<td data-label="Created"><span class="ss-created">' + esc(created) + '</span></td>' +
+            '<td class="ss-actions-cell" data-label="">' +
+              '<button class="btn btn-secondary btn-sm" data-view="' + s.id + '">View</button>' +
+              '<button class="btn btn-secondary btn-sm" data-edit="' + s.id + '">Edit</button>' +
+              (s.status === "PUBLISHED"
+                ? '<button class="btn btn-secondary btn-sm" data-unpublish="' + s.id + '">Unpublish</button>'
+                : '<button class="btn btn-success btn-sm" data-publish="' + s.id + '">Publish</button>') +
+              '<button class="btn btn-danger btn-sm" data-delete="' + s.id + '">Delete</button>' +
+            '</td>' +
+          '</tr>';
+      }).join("") +
+      '</tbody></table></div>';
+    listHost.removeAttribute("aria-busy");
+    wireRowActions(list);
+  }
+
+  function wireRowActions(list) {
+    function findStory(id) {
+      return list.filter(function (x) { return String(x.id) === String(id); })[0];
+    }
+    Array.prototype.forEach.call(listHost.querySelectorAll("[data-view]"), function (btn) {
+      btn.addEventListener("click", function () { openView(findStory(btn.getAttribute("data-view"))); });
+    });
+    Array.prototype.forEach.call(listHost.querySelectorAll("[data-edit]"), function (btn) {
+      btn.addEventListener("click", function () { openForm(findStory(btn.getAttribute("data-edit"))); });
+    });
+    Array.prototype.forEach.call(listHost.querySelectorAll("[data-delete]"), function (btn) {
+      btn.addEventListener("click", async function () {
+        var story = findStory(btn.getAttribute("data-delete"));
+        if (!story) return;
+        if (!confirm("Delete \u201c" + story.name + "\u201d?\n\nThis permanently removes this video review and cannot be undone.")) return;
+        var row = btn.closest("tr");
+        var siblings = row ? row.querySelectorAll("button") : [btn];
+        Array.prototype.forEach.call(siblings, function (b) { b.disabled = true; });
+        try {
+          await Teacher.api.del("/teacher/success-stories/" + story.id);
+          Teacher.toast("Video review deleted", "ok");
+          await loadStories();
+        } catch (e) {
+          Teacher.toast(e.message, "err");
+          Array.prototype.forEach.call(siblings, function (b) { b.disabled = false; });
+        }
+      });
+    });
+    Array.prototype.forEach.call(listHost.querySelectorAll("[data-publish]"), function (btn) {
+      btn.addEventListener("click", async function () {
+        var id = btn.getAttribute("data-publish");
+        btn.disabled = true;
+        try {
+          await Teacher.api.patch("/teacher/success-stories/" + id + "/publish");
+          Teacher.toast("Video review published", "ok");
+          await loadStories();
+        } catch (e) { Teacher.toast(e.message, "err"); btn.disabled = false; }
+      });
+    });
+    Array.prototype.forEach.call(listHost.querySelectorAll("[data-unpublish]"), function (btn) {
+      btn.addEventListener("click", async function () {
+        var id = btn.getAttribute("data-unpublish");
+        btn.disabled = true;
+        try {
+          await Teacher.api.patch("/teacher/success-stories/" + id + "/unpublish");
+          Teacher.toast("Video review unpublished", "ok");
+          await loadStories();
+        } catch (e) { Teacher.toast(e.message, "err"); btn.disabled = false; }
+      });
+    });
+  }
+
+  async function loadStories() {
+    try {
+      allStories = await Teacher.api.get("/teacher/success-stories");
+      applyFilter();
+    } catch (e) {
+      Teacher.emptyState(listHost, { icon: "\u26A0\uFE0F", title: "Something went wrong", error: true, retry: true, message: e.message });
+      var btn = listHost.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", loadStories);
+    }
+  }
+
+  async function loadCourses() {
+    var select = document.getElementById("ssCourse");
+    try {
+      allCourses = await Teacher.api.get("/teacher/courses");
+      select.innerHTML = '<option value="">— none —</option>' + allCourses.map(function (c) {
+        return '<option value="' + c.id + '">' + esc(c.title) + '</option>';
+      }).join("");
+    } catch (e) {
+      /* Non-fatal: the rest of the page (and manual course entry via designation) still works
+         without the dropdown populated - just surface it once via toast. */
+      Teacher.toast("Couldn't load your courses: " + e.message, "err");
+    }
+  }
+
+  categoryFilter.addEventListener("change", applyFilter);
+  statusFilter.addEventListener("change", applyFilter);
+  searchInput.addEventListener("input", applyFilter);
+
+  Teacher.skeleton(listHost, { count: 4 });
+  await Promise.all([loadStories(), loadCourses()]);
+
+  /* ============================ view modal ============================ */
+
+  var viewModal = Teacher.bindModal("viewModal");
+  document.getElementById("viewCloseBtn").addEventListener("click", function () { viewModal.close(); });
+
+  function videoPreviewMarkup(url) {
+    if (!url) return "";
+    var abs = Teacher.mediaUrl(url);
+    var u = abs.toLowerCase();
+    if (/\.(mp4|webm|mov|avi|mkv|mpeg|mpg|m4v|3gp|flv|ogv)(\?|$)/.test(u)) {
+      return '<video controls style="width:100%;border-radius:8px;background:#000;margin-bottom:14px" src="' + esc(abs) + '"></video>';
+    }
+    return '<iframe src="' + esc(abs) + '" style="width:100%;height:220px;border:0;border-radius:8px;margin-bottom:14px" allowfullscreen></iframe>';
+  }
+
+  function openView(story) {
+    if (!story) return;
+    var body = document.getElementById("viewBody");
+    body.innerHTML =
+      videoPreviewMarkup(story.videoUrl) +
+      '<div class="ssv-row"><div class="ssv-label">Name</div><div class="ssv-value">' + esc(story.name) + '</div></div>' +
+      '<div class="ssv-row"><div class="ssv-label">Category</div><div class="ssv-value">' + esc(categoryLabel(story.category)) + '</div></div>' +
+      '<div class="ssv-row"><div class="ssv-label">Course</div><div class="ssv-value">' + esc(story.courseProgram || story.courseTitle || "—") + '</div></div>' +
+      '<div class="ssv-row"><div class="ssv-label">Designation</div><div class="ssv-value">' + esc(story.designation || "—") + '</div></div>' +
+      '<div class="ssv-row"><div class="ssv-label">Status</div><div class="ssv-value">' + statusBadge(story.status) + '</div></div>' +
+      '<div class="ssv-row"><div class="ssv-label">Created by</div><div class="ssv-value">' + esc(story.createdBy || "—") + '</div></div>' +
+      (story.description ? '<div class="ssv-row"><div class="ssv-label">Description</div><div class="ssv-value">' + esc(story.description) + '</div></div>' : '');
+    viewModal.open();
+  }
+
+  /* ============================ add / edit modal ============================ */
+
+  var storyModal = Teacher.bindModal("storyModal", { onClose: resetForm });
+  var storyForm = document.getElementById("storyForm");
+  var titleEl = document.getElementById("storyModalTitle");
+  var saveBtn = document.getElementById("ssSaveBtn");
+
+  function resetForm() {
+    storyForm.reset();
+    editingId = null;
+    pendingVideoUrl = "";
+    pendingThumbnailUrl = "";
+    document.getElementById("ssVideoFileName").textContent = "No file selected";
+    document.getElementById("ssVideoStatus").textContent = "";
+    document.getElementById("ssVideoPreview").innerHTML = "";
+    document.getElementById("ssVideoProgressOuter").style.display = "none";
+    document.getElementById("ssVideoProgressInner").style.width = "0%";
+    document.getElementById("ssThumbFileName").textContent = "No file selected";
+    document.getElementById("ssThumbStatus").textContent = "";
+    document.getElementById("ssThumbPreview").innerHTML = "";
+    Teacher.fieldError(document.getElementById("nameField"), document.getElementById("ssNameError"), "");
+    Teacher.fieldError(document.getElementById("categoryField"), document.getElementById("ssCategoryError"), "");
+    Teacher.fieldError(null, document.getElementById("ssVideoError"), "");
+  }
+
+  function openForm(story) {
+    resetForm();
+    editingId = story ? story.id : null;
+    titleEl.textContent = story ? "Edit Video Review" : "Add Video Review";
+    saveBtn.textContent = "Save Video Review";
+    if (story) {
+      document.getElementById("ssName").value = story.name || "";
+      document.getElementById("ssCategory").value = (story.category || "").toLowerCase();
+      document.getElementById("ssCourse").value = story.courseId || "";
+      document.getElementById("ssDesignation").value = story.designation || "";
+      document.getElementById("ssDescription").value = story.description || "";
+      document.getElementById("ssStatus").value = story.status || "DRAFT";
+      pendingVideoUrl = story.videoUrl || "";
+      pendingThumbnailUrl = story.thumbnailUrl || "";
+      if (pendingVideoUrl) {
+        document.getElementById("ssVideoFileName").textContent = "Current video kept (choose a new file to replace)";
+        document.getElementById("ssVideoPreview").innerHTML = videoPreviewBoxMarkup(pendingVideoUrl);
+      }
+      if (pendingThumbnailUrl) {
+        document.getElementById("ssThumbFileName").textContent = "Current thumbnail kept (choose a new file to replace)";
+        document.getElementById("ssThumbPreview").innerHTML =
+          '<img src="' + esc(Teacher.mediaUrl(pendingThumbnailUrl)) + '" alt="">';
+      }
+    } else {
+      document.getElementById("ssStatus").value = "DRAFT";
+    }
+    storyModal.open();
+  }
+
+  function videoPreviewBoxMarkup(url) {
+    var abs = Teacher.mediaUrl(url);
+    return '<video controls src="' + esc(abs) + '"></video>';
+  }
+
+  function generateBrowserThumbnail(url) {
+    return new Promise(function (resolve) {
+      if (!url) { resolve(""); return; }
+      var video = document.createElement("video");
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.preload = "metadata";
+      video.onloadedmetadata = function () {
+        video.currentTime = Math.min(0.5, Math.max(0, (video.duration || 1) / 2));
+      };
+      video.onseeked = function () {
+        try {
+          var canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth || 640;
+          canvas.height = video.videoHeight || 360;
+          canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(async function (blob) {
+            if (!blob) { resolve(""); return; }
+            try {
+              var formData = new FormData();
+              formData.append("file", blob, "success-story-video-frame.jpg");
+              formData.append("folder", "success-stories");
+              var uploaded = await Teacher.api.upload("/files", formData, "POST");
+              resolve(uploaded.url || "");
+            } catch (e) { resolve(""); }
+          }, "image/jpeg", 0.88);
+        } catch (e) { resolve(""); }
+      };
+      video.onerror = function () { resolve(""); };
+      video.src = Teacher.mediaUrl(url);
+    });
+  }
+
+  document.getElementById("addBtn").addEventListener("click", function () { openForm(null); });
+  document.getElementById("ssCancelBtn").addEventListener("click", function () { storyModal.close(); });
+
+  /* ---- video upload ---- */
+  var videoFileInput = document.getElementById("ssVideoFile");
+  document.getElementById("ssVideoChoose").addEventListener("click", function () { videoFileInput.click(); });
+  videoFileInput.addEventListener("change", async function () {
+    var file = videoFileInput.files[0];
+    if (!file) return;
+    var nameEl = document.getElementById("ssVideoFileName");
+    var statusEl = document.getElementById("ssVideoStatus");
+    var outer = document.getElementById("ssVideoProgressOuter");
+    var inner = document.getElementById("ssVideoProgressInner");
+    var chooseBtn = document.getElementById("ssVideoChoose");
+    /* PART 2/10 - VIDEO UPLOAD: extension-first (browsers report no type for MKV/FLV/OGV/3GP);
+       the backend re-validates the real container bytes. */
+    var ssExt = (file.name || "").toLowerCase().split(".").pop().replace(/[^a-z0-9]/g, "");
+    if (["mp4","webm","mov","avi","mkv","mpeg","mpg","m4v","3gp","flv","ogv"].indexOf(ssExt) === -1 && !/^video\//.test(file.type || "")) {
+      nameEl.innerHTML = esc(file.name) + ' <span style="color:var(--danger)">— use MP4, WebM or MOV</span>';
+      videoFileInput.value = "";
+      return;
+    }
+    nameEl.textContent = file.name;
+    var formData = new FormData();
+    formData.append("file", file);
+    try {
+      chooseBtn.disabled = true;
+      outer.style.display = "block";
+      statusEl.textContent = "Uploading video… 0%";
+      var uploaded = await Teacher.api.uploadWithProgress("/teacher/success-stories/video-upload", formData, function (pct) {
+        inner.style.width = (pct === null ? 0 : pct) + "%";
+        statusEl.textContent = pct === null ? "Uploading video…" : ("Uploading video… " + pct + "%");
+      }, "POST");
+      pendingVideoUrl = uploaded.url;
+      pendingThumbnailUrl = uploaded.thumbnailUrl || await generateBrowserThumbnail(pendingVideoUrl);
+      statusEl.textContent = "Video uploaded.";
+      document.getElementById("ssVideoPreview").innerHTML = videoPreviewBoxMarkup(pendingVideoUrl);
+      document.getElementById("ssThumbStatus").textContent = pendingThumbnailUrl
+        ? "Thumbnail generated from this video."
+        : "Thumbnail generation unavailable; a fallback will be used.";
+      document.getElementById("ssThumbPreview").innerHTML = pendingThumbnailUrl
+        ? '<img src="' + esc(Teacher.mediaUrl(pendingThumbnailUrl)) + '" alt="Generated video thumbnail">'
+        : "";
+      Teacher.fieldError(null, document.getElementById("ssVideoError"), "");
+    } catch (e) {
+      statusEl.textContent = "";
+      Teacher.toast(e.message, "err");
+    } finally {
+      chooseBtn.disabled = false;
+      outer.style.display = "none";
+    }
+  });
+
+  /* ---- thumbnail upload (generic /files endpoint, same as the rest of the site) ---- */
+  var thumbFileInput = document.getElementById("ssThumbFile");
+  document.getElementById("ssThumbChoose").addEventListener("click", function () { thumbFileInput.click(); });
+  thumbFileInput.addEventListener("change", async function () {
+    var file = thumbFileInput.files[0];
+    if (!file) return;
+    var nameEl = document.getElementById("ssThumbFileName");
+    var statusEl = document.getElementById("ssThumbStatus");
+    var chooseBtn = document.getElementById("ssThumbChoose");
+    if (!/^image\//.test(file.type)) {
+      nameEl.innerHTML = esc(file.name) + ' <span style="color:var(--danger)">— not an image file</span>';
+      thumbFileInput.value = "";
+      return;
+    }
+    nameEl.textContent = file.name;
+    var formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "success-stories");
+    formData.append("uploadedBy", session.username);
+    try {
+      chooseBtn.disabled = true;
+      statusEl.textContent = "Uploading thumbnail…";
+      var uploaded = await Teacher.api.upload("/files", formData, "POST");
+      pendingThumbnailUrl = uploaded.url;
+      statusEl.textContent = "Thumbnail uploaded.";
+      document.getElementById("ssThumbPreview").innerHTML =
+        '<img src="' + esc(Teacher.mediaUrl(pendingThumbnailUrl)) + '" alt="">';
+    } catch (e) {
+      statusEl.textContent = "";
+      Teacher.toast(e.message, "err");
+    } finally {
+      chooseBtn.disabled = false;
+    }
+  });
+
+  /* ---- save (create or update), then apply the chosen Draft/Published status ---- */
+  storyForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var name = document.getElementById("ssName").value.trim();
+    var nameField = document.getElementById("nameField");
+    var nameErr = document.getElementById("ssNameError");
+    var category = document.getElementById("ssCategory").value;
+    var categoryField = document.getElementById("categoryField");
+    var categoryErr = document.getElementById("ssCategoryError");
+    var videoErr = document.getElementById("ssVideoError");
+    var ok = true;
+    if (!name) { Teacher.fieldError(nameField, nameErr, "Name is required."); ok = false; }
+    else Teacher.fieldError(nameField, nameErr, "");
+    if (!category) { Teacher.fieldError(categoryField, categoryErr, "Category is required."); ok = false; }
+    else Teacher.fieldError(categoryField, categoryErr, "");
+    if (!pendingVideoUrl) { Teacher.fieldError(null, videoErr, "Please upload a video."); ok = false; }
+    else Teacher.fieldError(null, videoErr, "");
+    if (!ok) { Teacher.toast("Please fix the highlighted fields.", "err"); return; }
+
+    var courseSelect = document.getElementById("ssCourse");
+    var courseId = courseSelect.value ? Number(courseSelect.value) : null;
+    var courseTitle = courseId ? (courseSelect.options[courseSelect.selectedIndex].textContent || "") : "";
+    var desiredStatus = document.getElementById("ssStatus").value;
+
+    var payload = {
+      name: name,
+      category: category,
+      courseProgram: courseId ? courseTitle : null,
+      courseId: courseId,
+      designation: document.getElementById("ssDesignation").value.trim() || null,
+      description: document.getElementById("ssDescription").value.trim() || null,
+      videoUrl: pendingVideoUrl,
+      thumbnailUrl: pendingThumbnailUrl || null
+    };
+
+    try {
+      await Teacher.withButtonLoading(saveBtn, async function () {
+        var saved;
+        if (editingId) {
+          saved = await Teacher.api.put("/teacher/success-stories/" + editingId, payload);
+        } else {
+          saved = await Teacher.api.post("/teacher/success-stories", payload);
+        }
+        /* The create/update endpoint never accepts status directly (a story always starts as
+           DRAFT server-side) - publish/unpublish are their own dedicated calls, so the form's
+           Status choice is applied as a second step right after saving the fields above. */
+        if (desiredStatus === "PUBLISHED" && saved.status !== "PUBLISHED") {
+          await Teacher.api.patch("/teacher/success-stories/" + saved.id + "/publish");
+        } else if (desiredStatus === "DRAFT" && saved.status === "PUBLISHED") {
+          await Teacher.api.patch("/teacher/success-stories/" + saved.id + "/unpublish");
+        }
+      }, "Saving…");
+      Teacher.toast(editingId ? "Video review updated" : "Video review created", "ok");
+      storyModal.close();
+      await loadStories();
+    } catch (e) {
+      Teacher.toast(e.message, "err");
+    }
+  });
+
+  /* If the browser restores this page from bfcache (e.g. pressing "back" after Logout),
+     re-check auth instead of showing the cached page. */
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

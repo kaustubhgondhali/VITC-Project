@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><meta name="robots" content="noindex,nofollow"><title>Job Applications | VITC Admin</title><link rel="stylesheet" href="assets/admin.css?v=p6"></head>
+<body><script src="assets/admin.js?v=p8"></script><script>
+(function () {
+  var esc = Admin.esc;
+  var mount = Admin.renderShell('job-applications', 'Job Applications');
+  if (!mount) return;
+
+  var STATUSES = ['SUBMITTED', 'SHORTLISTED', 'INTERVIEW', 'SELECTED', 'REJECTED'];
+  var LABEL = { SUBMITTED: 'New', SHORTLISTED: 'Shortlisted', INTERVIEW: 'Interview', SELECTED: 'Selected', REJECTED: 'Rejected' };
+  var TONE = { SUBMITTED: 'info', SHORTLISTED: 'warn', INTERVIEW: 'warn', SELECTED: 'ok', REJECTED: 'danger' };
+  var GENERAL = '__general__';
+
+  var rows = [];
+  var filter = { text: '', company: '', status: '' };
+
+  mount.innerHTML =
+    '<div class="grid stats" id="stats" style="margin-bottom:16px"></div>' +
+    '<div class="toolbar"><div class="left">' +
+      '<input class="search" id="search" type="search" placeholder="Search name, email, job, skills…">' +
+      '<select id="company" style="max-width:240px"><option value="">All companies</option></select>' +
+      '<select id="status" style="max-width:180px"><option value="">All statuses</option>' +
+        STATUSES.map(function (s) { return '<option value="' + s + '">' + LABEL[s] + '</option>'; }).join('') + '</select>' +
+      '<span class="muted" id="count"></span></div></div>' +
+    '<div class="table-wrap" id="table"><div class="empty">Loading…</div></div>';
+
+  function badge(status) {
+    return '<span class="badge badge-' + (TONE[status] || 'muted') + '">' + esc(LABEL[status] || status || '—') + '</span>';
+  }
+  function experience(r) {
+    if (r.experienceYears === 0) return 'Fresher';
+    if (r.experienceYears === null || r.experienceYears === undefined) return '—';
+    return r.experienceYears + (r.experienceYears === 1 ? ' year' : ' years');
+  }
+  function companyKey(r) { return r.companyName || GENERAL; }
+  function stat(label, value, icon) {
+    return '<div class="card stat"><div class="ico">' + icon + '</div><div class="label">' + label + '</div>' +
+      '<div class="value">' + value + '</div></div>';
+  }
+
+  /* ======================= Draw ======================= */
+
+  function drawStats() {
+    function count(s) { return rows.filter(function (r) { return r.status === s; }).length; }
+    mount.querySelector('#stats').innerHTML =
+      stat('Total applications', rows.length, '📄') + stat('New', count('SUBMITTED'), '🆕') +
+      stat('Shortlisted', count('SHORTLISTED'), '⭐') + stat('Interview', count('INTERVIEW'), '🗓') +
+      stat('Selected', count('SELECTED'), '✅');
+  }
+
+  function drawCompanyFilter() {
+    var select = mount.querySelector('#company');
+    var companies = {};
+    rows.forEach(function (r) { companies[companyKey(r)] = (companies[companyKey(r)] || 0) + 1; });
+    var keys = Object.keys(companies).sort(function (a, b) {
+      if (a === GENERAL) return 1;
+      if (b === GENERAL) return -1;
+      return a.localeCompare(b);
+    });
+    select.innerHTML = '<option value="">All companies</option>' + keys.map(function (k) {
+      return '<option value="' + esc(k) + '"' + (k === filter.company ? ' selected' : '') + '>' +
+        esc(k === GENERAL ? 'General applications' : k) + ' (' + companies[k] + ')</option>';
+    }).join('');
+    if (filter.company && !companies[filter.company]) filter.company = '';
+  }
+
+  function matches(r) {
+    if (filter.company && companyKey(r) !== filter.company) return false;
+    if (filter.status && r.status !== filter.status) return false;
+    if (!filter.text) return true;
+    return [r.reference, r.fullName, r.email, r.phone, r.jobTitle, r.companyName, r.skills, r.currentCity,
+      r.highestQualification, r.institution].join(' ').toLowerCase().indexOf(filter.text) >= 0;
+  }
+
+  var ACTIONS = [
+    { label: 'View', className: 'btn-primary', onClick: view },
+    { label: 'Resume', visible: function (r) { return r.hasResume || !!r.resumeUrl; }, onClick: downloadResume },
+    { label: 'Status', onClick: setStatus },
+    { label: 'Delete', className: 'btn-danger', onClick: remove }
+  ];
+
+  function drawTable() {
+    var view = rows.filter(matches);
+    mount.querySelector('#count').textContent = view.length + ' of ' + rows.length + ' applications';
+    var host = mount.querySelector('#table');
+    if (!view.length) {
+      host.innerHTML = '<div class="empty">' + (rows.length
+        ? 'No application matches these filters.'
+        : 'No job applications yet. They appear here as soon as candidates apply from the Job Portal.') + '</div>';
+      return;
+    }
+    host.innerHTML = '<table><thead><tr><th>Applicant</th><th>Applied for</th><th>Profile</th><th>Status</th>' +
+      '<th>Applied on</th><th class="right">Actions</th></tr></thead><tbody></tbody></table>';
+    var tbody = host.querySelector('tbody');
+    view.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><strong>' + esc(r.fullName) + '</strong><div class="muted">' + esc(r.email) + '<br>' + esc(r.phone || '') + '</div></td>' +
+        '<td><strong>' + esc(r.jobTitle || '—') + '</strong><div class="muted">' + esc(r.companyName || 'General application') + '</div></td>' +
+        '<td>' + esc(experience(r)) + '<div class="muted">' + esc(r.highestQualification || '') +
+          (r.currentCity ? ' · ' + esc(r.currentCity) : '') + '</div></td>' +
+        '<td>' + badge(r.status) + '</td>' +
+        '<td>' + Admin.date(r.submittedAt) + '<div class="muted">' + esc(r.reference) + '</div></td>' +
+        '<td class="actions">' + ACTIONS.map(function (a, i) {
+          if (a.visible && !a.visible(r)) return '';
+          return '<button class="btn btn-sm ' + (a.className || '') + '" data-act="' + i + '">' + esc(a.label) + '</button>';
+        }).join(' ') + '</td>';
+      tr.querySelectorAll('[data-act]').forEach(function (b) {
+        b.addEventListener('click', async function () {
+          b.disabled = true;
+          try { await ACTIONS[Number(b.getAttribute('data-act'))].onClick(r); }
+          catch (e) { Admin.toast(e.message, 'err'); }
+          b.disabled = false;
+        });
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function redraw() { drawStats(); drawCompanyFilter(); drawTable(); }
+
+  /* ======================= Actions ======================= */
+
+  function row(label, value) {
+    return '<div class="field"><label>' + esc(label) + '</label><div>' +
+      (value === null || value === undefined || value === '' ? '—' : value) + '</div></div>';
+  }
+  function link(url) {
+    return url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(url) + '</a>' : '';
+  }
+  function section(title) {
+    return '<div style="margin:18px 0 8px;font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase" class="muted">' +
+      esc(title) + '</div>';
+  }
+
+  function view(r) {
+    var modal = Admin.openModal(r.fullName + ' — ' + r.reference,
+      '<div class="card" style="margin-bottom:6px"><strong>' + esc(r.jobTitle || '—') + '</strong>' +
+        '<div class="muted">' + esc(r.companyName || 'General application') + ' · applied ' + Admin.date(r.submittedAt) + '</div>' +
+        '<div style="margin-top:8px">' + badge(r.status) + '</div></div>' +
+      section('Personal details') +
+      '<div class="field-row"><div>' + row('Email', '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>') + '</div>' +
+        '<div>' + row('Phone', '<a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a>') + '</div></div>' +
+      '<div class="field-row"><div>' + row('Current city', esc(r.currentCity)) + '</div>' +
+        '<div>' + row('Date of birth / gender', esc([r.dateOfBirth ? Admin.date(r.dateOfBirth) : '', r.gender].filter(Boolean).join(' · '))) + '</div></div>' +
+      section('Education') +
+      '<div class="field-row"><div>' + row('Highest qualification', esc(r.highestQualification)) + '</div>' +
+        '<div>' + row('College / university', esc(r.institution)) + '</div></div>' +
+      '<div class="field-row"><div>' + row('Passing year', esc(r.graduationYear)) + '</div>' +
+        '<div>' + row('Percentage / CGPA', esc(r.academicScore)) + '</div></div>' +
+      section('Experience') +
+      '<div class="field-row"><div>' + row('Total experience', esc(experience(r))) + '</div>' +
+        '<div>' + row('Current / last company', esc(r.currentCompany)) + '</div></div>' +
+      '<div class="field-row"><div>' + row('Current CTC / expected CTC', esc([r.currentCtc || '—', r.expectedCtc || '—'].join(' / '))) + '</div>' +
+        '<div>' + row('Notice period', esc(r.noticePeriod)) + '</div></div>' +
+      section('Skills & profiles') +
+      row('Key skills', esc(r.skills)) +
+      '<div class="field-row"><div>' + row('LinkedIn', link(r.linkedinUrl)) + '</div><div>' + row('Portfolio / GitHub', link(r.portfolioUrl)) + '</div></div>' +
+      section('Resume & cover letter') +
+      row('Resume', r.hasResume
+        ? esc(r.resumeFileName) + ' · ' + Admin.bytes(r.resumeSizeBytes) + ' <button type="button" class="btn btn-sm" id="viewResume">Download</button>'
+        : (r.resumeUrl ? link(Admin.mediaUrl(r.resumeUrl)) : '')) +
+      row('Cover letter', r.coverLetter ? '<div style="white-space:pre-line">' + esc(r.coverLetter) + '</div>' : '') +
+      (r.adminNotes ? section('Recruiter notes') + '<div style="white-space:pre-line">' + esc(r.adminNotes) + '</div>' : ''),
+      function (m, close) { close(); setStatus(r); }, 'Update status');
+    var btn = modal.querySelector('#viewResume');
+    if (btn) btn.addEventListener('click', function () {
+      downloadResume(r).catch(function (e) { Admin.toast(e.message, 'err'); });
+    });
+  }
+
+  /* The resume endpoint needs the admin session headers, so it is fetched here rather than linked. */
+  async function downloadResume(r) {
+    if (!r.hasResume) {
+      window.open(Admin.mediaUrl(r.resumeUrl), '_blank', 'noopener');
+      return;
+    }
+    var admin = Admin.getAdmin() || {};
+    var res = await fetch(Admin.API_BASE + '/api/v1/admin/job-applications/' + r.id + '/resume', {
+      headers: { 'X-Admin-Username': admin.username || '', 'X-Admin-Token': admin.sessionToken || '' }
+    });
+    if (!res.ok) {
+      var json = await res.json().catch(function () { return null; });
+      throw new Error((json && json.message) || 'The resume could not be downloaded.');
+    }
+    var url = URL.createObjectURL(await res.blob());
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = r.resumeFileName || ('resume-' + r.reference);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  function setStatus(r) {
+    Admin.openModal('Update status — ' + r.fullName,
+      '<div class="field"><label for="stSel">Status</label><select id="stSel">' +
+        STATUSES.map(function (s) {
+          return '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + LABEL[s] + '</option>';
+        }).join('') + '</select></div>' +
+      '<div class="field"><label for="stNotes">Recruiter notes</label>' +
+        '<textarea id="stNotes" maxlength="1000" placeholder="Visible to admins only — e.g. interview date, feedback">' +
+        esc(r.adminNotes || '') + '</textarea></div>',
+      async function (m, close) {
+        var updated = await Admin.api.patch('/admin/job-applications/' + r.id + '/status', {
+          status: m.querySelector('#stSel').value,
+          adminNotes: m.querySelector('#stNotes').value
+        });
+        rows = rows.map(function (x) { return x.id === updated.id ? updated : x; });
+        redraw();
+        Admin.toast('Application updated', 'ok');
+        close();
+      }, 'Save');
+  }
+
+  function remove(r) {
+    Admin.confirmDelete('the application of ' + r.fullName + ' (' + r.reference + ')', async function () {
+      await Admin.api.del('/admin/job-applications/' + r.id);
+      rows = rows.filter(function (x) { return x.id !== r.id; });
+      redraw();
+      Admin.toast('Application deleted', 'ok');
+    });
+  }
+
+  /* ======================= Load ======================= */
+
+  mount.querySelector('#search').addEventListener('input', function (e) {
+    filter.text = e.target.value.trim().toLowerCase();
+    drawTable();
+  });
+  mount.querySelector('#company').addEventListener('change', function (e) { filter.company = e.target.value; drawTable(); });
+  mount.querySelector('#status').addEventListener('change', function (e) { filter.status = e.target.value; drawTable(); });
+
+  Admin.api.get('/admin/job-applications').then(function (data) {
+    rows = data || [];
+    redraw();
+  }).catch(function (e) {
+    mount.querySelector('#table').innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+    Admin.toast(e.message, 'err');
+  });
+})();
+</script></body></html>

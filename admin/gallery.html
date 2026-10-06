@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Gallery — VITC Admin</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+Admin.crudPage({
+  key: 'gallery',
+  title: 'Manage Gallery',
+  singular: 'Gallery item',
+  endpoint: '/gallery',
+  searchKeys: ['title', 'category', 'caption'],
+  labelOf: function (r) { return r.title; },
+  columns: [
+    { label: 'Image', render: function (r) { return '<img class="thumb" src="' + Admin.esc(Admin.mediaUrl(r.imageUrl)) + '" alt="' + Admin.esc(r.title) + '">'; } },
+    { label: 'Title', key: 'title' },
+    { label: 'Category', render: function (r) { return Admin.esc(r.category || '—'); } },
+    { label: 'Caption', render: function (r) { return Admin.esc((r.caption || '').slice(0, 70)); } },
+    { label: 'Added', render: function (r) { return Admin.date(r.createdAt); } }
+  ],
+  prepareFields: async function () {
+    var categories = await Admin.api.get('/gallery/categories');
+    var standardCategories = ['student', 'teacher', 'parent'];
+    standardCategories.forEach(function (standard) {
+      if (!categories.some(function (category) { return category.toLowerCase() === standard; })) {
+        categories.push(standard);
+      }
+    });
+    return this.fields.map(function (field) {
+      if (field.name !== 'category') return field;
+      return Object.assign({}, field, {
+        allowEmpty: false,
+        options: [{ value: '', label: 'All' }].concat(categories.map(function (name) {
+          return { value: name, label: name.replace(/\b\w/g, function (letter) { return letter.toUpperCase(); }) };
+        }))
+          .concat([{ value: '__add_category__', label: '+ Add Category' }])
+      });
+    });
+  },
+  onFormReady: function (modal) {
+    var category = modal.querySelector('[name="category"]');
+    if (!category) return;
+    category.addEventListener('change', async function () {
+      if (category.value !== '__add_category__') return;
+      category.value = '';
+      var addModal = Admin.openModal('Add Gallery Category',
+        '<div class="field"><label for="newGalleryCategory">Category *</label>' +
+        '<input id="newGalleryCategory" name="name" required maxlength="60" placeholder="Category name"></div>',
+        async function (form, close) {
+          var input = form.querySelector('[name="name"]');
+          var name = input.value.trim();
+          if (!name) throw new Error('Category name is required');
+          var created = await Admin.api.post('/gallery/categories', { name: name });
+          var option = document.createElement('option');
+          option.value = created;
+          option.textContent = created;
+          category.insertBefore(option, category.lastElementChild);
+          category.value = created;
+          Admin.toast('Category added', 'ok');
+          close();
+        }, 'Add Category');
+      addModal.querySelector('[name="name"]').focus();
+    });
+  },
+  fields: [
+    { name: 'title', label: 'Title', required: true },
+    { name: 'imageUrl', label: 'Image', type: 'image', folder: 'gallery', required: true },
+    { name: 'category', label: 'Category', type: 'select', half: true, allowEmpty: true, options: [] },
+    { name: 'caption', label: 'Caption', half: true }
+  ]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B3D91">
+<title>Order Summary — Track Your VITC Purchase | Vandana IT Course (VITC)</title>
+<meta name="description" content="Review your VITC order: item, customer details, payment method, transaction id and amount breakdown.">
+<meta name="keywords" content="Vandana IT Course, IT Classes Uran, IT Institute Uran, Buy IT Course Online, Programming Assignments, College Project Help Uran, Full Stack Course Uran, Python Classes Uran, Java Classes Uran, Digital Marketing Uran, Cyber Security Course Uran, Data Science Institute Uran, Internship Uran, IT Training Navi Mumbai">
+<meta name="author" content="Vandana IT Course (VITC)">
+<link rel="canonical" href="/order-summary.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vandana IT Course (VITC)">
+<meta property="og:url" content="/order-summary.html">
+<meta property="og:title" content="Order Summary — Track Your VITC Purchase | Vandana IT Course (VITC)">
+<meta property="og:description" content="Review your VITC order: item, customer details, payment method, transaction id and amount breakdown.">
+<meta property="og:image" content="assets/img/logo.jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Order Summary — Track Your VITC Purchase | Vandana IT Course (VITC)">
+<meta name="twitter:description" content="Review your VITC order: item, customer details, payment method, transaction id and amount breakdown.">
+<meta name="twitter:image" content="assets/img/logo.jpeg">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" type="image/jpeg" href="assets/img/logo.jpeg">
+<link rel="apple-touch-icon" href="assets/img/logo.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"EducationalOrganization","name":"Vandana IT Course (VITC)","url":"https://vandanaitcourse.com","logo":"assets/img/logo.jpeg","telephone":"+919967874887","email":"info@vandanaitcourse.com","address":{"@type":"PostalAddress","streetAddress":"Near Gade Hospital, Shreeraj Nagar","addressLocality":"Uran","addressRegion":"Maharashtra","postalCode":"400702","addressCountry":"IN"},"sameAs":["https://facebook.com","https://instagram.com","https://linkedin.com","https://youtube.com"]}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "/index.html"}, {"@type": "ListItem", "position": 2, "name": "Checkout", "item": "/payment.html"}, {"@type": "ListItem", "position": 3, "name": "Order Confirmed", "item": "/"}]}
+</script>
+</head>
+<body class="inner">
+<div id="loader"><img src="assets/img/logo.jpeg" alt="VITC"><div class="bar"><span></span></div></div>
+<div id="scroll-progress"></div>
+<header class="header">
+<div class="container nav">
+<a class="brand" href="index.html"><img src="assets/img/logo.jpeg" alt="VITC Logo"><span>Vandana IT Course</span></a>
+<nav><ul class="nav-links"><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="buy-course.html" class="active">Buy Course</a></li><li><a href="assignments.html">Assignments</a></li><li><a href="gallery.html">Gallery</a></li><li><a href="success-stories.html">Success Stories</a></li><li><a href="blog.html">Blog</a></li><li><a href="reviews.html">Reviews</a></li><li><a href="career.html">Career</a></li><li><a href="internship.html">Internship</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
+<div class="nav-cta">
+<a class="btn btn-primary" href="contact.html">Apply Now</a>
+<button class="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Order Summary</h1>
+<p>Everything about your order in one place — item, payment and invoice.</p>
+<div class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Home</a> / <a href="payment.html">Checkout</a> / <span>Order Summary</span></div>
+</div>
+</section>
+
+<section id="summaryPage">
+<div class="container">
+<div class="steps-bar reveal">
+<div class="sb done"><i>✓</i><span>Select</span></div><div class="sep"></div>
+<div class="sb done"><i>✓</i><span>Payment</span></div><div class="sep"></div>
+<div class="sb active"><i>✓</i><span>Confirmation</span></div>
+</div>
+<div class="pay-layout reveal">
+<div>
+<div class="panel">
+<h3>Order Details</h3>
+<div class="sum-row"><span>Order ID</span><b data-i="orderId">—</b></div>
+<div class="sum-row"><span>Status</span><b data-i="status">—</b></div>
+<div class="sum-row"><span>Placed On</span><b data-i="date">—</b></div>
+<div class="sum-row"><span>Item</span><b data-i="item">—</b></div>
+<div class="sum-row"><span>Description</span><b data-i="meta">—</b></div>
+</div>
+<div class="panel">
+<h3>Customer</h3>
+<div class="sum-row"><span>Name</span><b data-i="name">—</b></div>
+<div class="sum-row"><span>Email</span><b data-i="email">—</b></div>
+<div class="sum-row"><span>Mobile</span><b data-i="phone">—</b></div>
+<div class="sum-row"><span>City</span><b data-i="city">—</b></div>
+</div>
+<div class="panel">
+<h3>Payment</h3>
+<div class="sum-row"><span>Method</span><b data-i="method">—</b></div>
+<div class="sum-row"><span>Details</span><b data-i="methodDetail">—</b></div>
+<div class="sum-row"><span>Transaction ID</span><b data-i="txn">—</b></div>
+<div class="sum-row"><span>Gateway</span><b data-i="provider">—</b></div>
+<div class="sum-row"><span>Invoice No.</span><b data-i="invoiceNo">—</b></div>
+</div>
+</div>
+<aside>
+<div class="summary sticky-card">
+<h3>Amount Summary</h3>
+<div class="sum-row"><span><b data-i="item">Item</b><br><small data-i="meta" style="color:var(--muted)"></small></span><b data-i="base">₹0</b></div>
+<div class="sum-row" data-disc-row style="display:none"><span>Discount <span data-i="coupon" style="color:var(--muted)"></span></span><b data-i="disc" style="color:#0a8a3d">– ₹0</b></div>
+<div class="sum-row"><span>GST (18%)</span><b data-i="gst">₹0</b></div>
+<div class="sum-row total"><span>Total Paid</span><b data-i="total">₹0</b></div>
+<a class="btn btn-primary btn-block" style="margin-top:20px" data-link="invoice" href="invoice.html">🧾 View / Download Invoice</a>
+<button class="btn btn-ghost btn-block" style="margin-top:10px" id="printDoc" type="button">🖨️ Print Summary</button>
+<div class="secure-note">Need help? Call +91 99678 74887</div>
+</div>
+</aside>
+</div>
+</div>
+</section>
+
+<section id="payEmpty" style="display:none">
+<div class="container text-center">
+<h2>No order found</h2>
+<p style="max-width:620px;margin:10px auto 0">We could not find an order to display. Open this page from your confirmation email link, or start a new checkout.</p>
+<div class="mt-4"><a class="btn btn-primary" href="buy-course.html">Browse Courses</a> <a class="btn btn-ghost" href="assignments.html">Browse Assignments</a></div>
+</div>
+</section>
+<footer class="footer">
+<div class="container">
+<div class="footer-grid">
+<div>
+<div class="footer-brand"><img src="assets/img/logo.jpeg" alt="VITC">Vandana IT Course</div>
+<p style="color:#a8b6d1">Build Skills. Gain Experience. Launch Your Career.</p>
+<div class="socials" aria-label="Social">
+<a href="#" aria-label="Facebook">f</a>
+<a href="#" aria-label="Instagram">◉</a>
+<a href="#" aria-label="LinkedIn">in</a>
+<a href="#" aria-label="YouTube">▶</a>
+</div>
+</div>
+<div>
+<h4>Quick Links</h4>
+<a href="index.html">Home</a><a href="about.html">About</a><a href="courses.html">Courses</a>
+<a href="buy-course.html">Buy Course</a><a href="assignments.html">Assignments</a>
+<a href="gallery.html">Gallery</a><a href="success-stories.html">Success Stories</a><a href="blog.html">Blog</a>
+<a href="career.html">Career</a><a href="internship.html">Internship</a>
+<a href="reviews.html">Reviews</a><a href="contact.html">Contact</a><a href="admin/index.html" class="footer-admin-link">Admin Login</a><a href="teacher-login.html" class="footer-admin-link footer-teacher-link">Teacher Admin Login</a><a href="student-login.html" class="footer-admin-link footer-student-link">Student Admin Login</a>
+</div>
+<div>
+<h4>Popular Courses</h4>
+<a href="courses.html">Full Stack Development</a><a href="courses.html">Python</a><a href="courses.html">Java</a>
+<a href="courses.html">Data Science</a><a href="courses.html">AI &amp; Machine Learning</a>
+<a href="courses.html">Digital Marketing</a><a href="courses.html">Cloud Computing</a>
+<a href="courses.html">Cyber Security</a><a href="courses.html">Tally Prime</a><a href="courses.html">Graphic Designing</a>
+</div>
+<div>
+<h4>Contact</h4>
+<p style="color:#a8b6d1;font-size:.92rem">Near Gade Hospital, Shreeraj Nagar, Uran, Maharashtra – 400702</p>
+<a href="tel:+919967874887">Phone: +91 99678 74887</a>
+<a href="mailto:info@vandanaitcourse.com">info@vandanaitcourse.com</a>
+<form class="newsletter" onsubmit="return false"><input type="email" placeholder="Newsletter email" required><button>Join</button></form>
+<a class="map-thumb" href="https://maps.app.goo.gl/kC8JTekmiVZLgbgg7" target="_blank" rel="noopener"></a>
+</div>
+</div>
+<div class="footer-bottom">© 2026 Vandana IT Course (VITC). All Rights Reserved. | Uran • Navi Mumbai | <a href="admin/index.html" class="footer-admin-link">Admin Login</a><a href="teacher-login.html" class="footer-admin-link footer-teacher-link">Teacher Admin Login</a><a href="student-login.html" class="footer-admin-link footer-student-link">Student Admin Login</a></div>
+</div>
+</footer>
+<div class="floats">
+<a class="f-wa" href="https://wa.me/919967874887?text=Hi%20VITC%2C%20I%27d%20like%20to%20enquire%20about%20your%20courses" target="_blank" rel="noopener" aria-label="WhatsApp"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></a>
+<a class="f-call" href="tel:+919967874887" aria-label="Call">☎</a>
+<a class="f-mail" href="mailto:info@vandanaitcourse.com" aria-label="Email">✉</a>
+<button class="f-top" id="backTop" aria-label="Back to top">↑</button>
+</div>
+<div id="popup"><div class="p-inner"><button class="p-close" aria-label="Close">×</button>
+<h3>🎓 Free Career Counselling</h3>
+<p style="margin:8px 0 16px">Get a free 15-minute career counselling session with our expert mentors. Discover the right course for your future.</p>
+<a class="btn btn-primary" href="contact.html" style="width:100%">Book My Free Session</a>
+</div></div>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/site.js"></script>
+<script src="assets/js/payments.js"></script>
+<script src="assets/js/upgrade.js"></script>
+</body>
+</html>

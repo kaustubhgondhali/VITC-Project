@@ -1,0 +1,754 @@
+{
+  "courses": [
+    {
+      "code": "FULLSTACK",
+      "title": "Full Stack Development",
+      "price": 18999,
+      "meta": "5–6 Months • Beginner to Advanced",
+      "level": "Beginner to Advanced",
+      "category": "fullstack",
+      "durationMonths": "5–6 Months",
+      "description": "Career: Full Stack Developer / Frontend Developer / Web Developer. Topics: HTML, CSS, JavaScript, React, PHP, MySQL, API Integration.",
+      "icon": "🌐"
+    },
+    {
+      "code": "PROGRAMMING",
+      "title": "Programming Mastery",
+      "price": 12999,
+      "meta": "3–6 Months • Beginner",
+      "level": "Beginner",
+      "category": "programming",
+      "durationMonths": "3–6 Months",
+      "description": "Career: Software Developer / Backend Developer / Programmer. Topics: C, C++, Java, Python, SQL, PHP.",
+      "icon": "💻"
+    },
+    {
+      "code": "JAVA",
+      "title": "Java Programming",
+      "price": 8999,
+      "meta": "3 Months • Beginner to Advanced",
+      "level": "Beginner to Advanced",
+      "category": "programming",
+      "durationMonths": "3 Months",
+      "description": "Career: Java Developer / Backend Developer / Software Engineer. Topics: Core Java, OOPs, Exception Handling, Swing, Applet, JDBC, Servlet and JSP — 59 topics with practical projects.",
+      "icon": "☕"
+    },
+    {
+      "code": "DATA",
+      "title": "Data Science & AI",
+      "price": 21999,
+      "meta": "5–6 Months • Intermediate",
+      "level": "Intermediate",
+      "category": "data",
+      "durationMonths": "5–6 Months",
+      "description": "Career: Data Analyst / AI Engineer / ML Engineer. Topics: Python, Machine Learning, Power BI, Artificial Intelligence.",
+      "icon": "🤖"
+    },
+    {
+      "code": "MARKETING",
+      "title": "Digital Marketing",
+      "price": 10999,
+      "meta": "3–4 Months • Beginner",
+      "level": "Beginner",
+      "category": "marketing",
+      "durationMonths": "3–4 Months",
+      "description": "Career: Digital Marketing Executive / SEO Executive / Performance Marketer. Topics: SEO, Google Ads, Meta Ads, Social Media, Email Marketing.",
+      "icon": "📈"
+    },
+    {
+      "code": "CLOUD",
+      "title": "Cloud Computing (AWS)",
+      "price": 13999,
+      "meta": "2–3 Months • Intermediate",
+      "level": "Intermediate",
+      "category": "cloud",
+      "durationMonths": "2–3 Months",
+      "description": "Career: Cloud Engineer / System Administrator. Topics: AWS, Cloud Fundamentals.",
+      "icon": "☁️"
+    },
+    {
+      "code": "CYBER",
+      "title": "Cyber Security & Ethical Hacking",
+      "price": 16999,
+      "meta": "3–5 Months • Intermediate",
+      "level": "Intermediate",
+      "category": "cyber",
+      "durationMonths": "3–5 Months",
+      "description": "Career: Cyber Security Analyst. Topics: Ethical Hacking, Cyber Security, Networking.",
+      "icon": "🛡️"
+    },
+    {
+      "code": "DESIGN",
+      "title": "Graphics Designing",
+      "price": 8999,
+      "meta": "2–3 Months • Beginner",
+      "level": "Beginner",
+      "category": "design",
+      "durationMonths": "2–3 Months",
+      "description": "Career: Graphic Designer. Topics: Photoshop, CorelDRAW, Canva.",
+      "icon": "🎨"
+    },
+    {
+      "code": "ACCOUNT",
+      "title": "Accounting (Tally + GST)",
+      "price": 7999,
+      "meta": "2–3 Months • Beginner",
+      "level": "Beginner",
+      "category": "account",
+      "durationMonths": "2–3 Months",
+      "description": "Career: Accounts Executive. Topics: Tally Prime, GST, Advanced Excel.",
+      "icon": "💰"
+    }
+  ],
+  "assignments": [
+    {
+      "code": "A101",
+      "title": "E-Commerce Website (Full Stack)",
+      "price": 2499,
+      "tech": "React + PHP + MySQL",
+      "difficulty": "Advanced",
+      "deliveryDays": "3 Days",
+      "category": "fullstack",
+      "icon": "🛒",
+      "description": "Complete online store with product catalogue, cart, checkout flow, order history and an admin dashboard.",
+      "features": "Product catalogue with filters | Cart & checkout flow | Admin dashboard with CRUD | Order & invoice module | Responsive UI | Clean modular code structure"
+    },
+    {
+      "code": "A102",
+      "title": "Student Management System",
+      "price": 1499,
+      "tech": "Java + MySQL",
+      "difficulty": "Intermediate",
+      "deliveryDays": "2 Days",
+      "category": "programming",
+      "icon": "🏫",
+      "description": "Desktop-style CRUD application for student records, attendance, marksheets and printable reports.",
+      "features": "Student CRUD module | Attendance tracking | Marksheet generator | Search & filter records | Report printing | Login authentication"
+    },
+    {
+      "code": "A103",
+      "title": "Sales Data Analysis Dashboard",
+      "price": 1799,
+      "tech": "Python + Power BI",
+      "difficulty": "Intermediate",
+      "deliveryDays": "2 Days",
+      "category": "data",
+      "icon": "📊",
+      "description": "End-to-end analytics project: data cleaning, exploratory analysis and an interactive KPI dashboard.",
+      "features": "Data cleaning notebook | EDA with charts | Interactive Power BI dashboard | KPI cards & drilldowns | Insight summary document | Reusable dataset"
+    },
+    {
+      "code": "A104",
+      "title": "Hotel Booking Web App",
+      "price": 1999,
+      "tech": "HTML + CSS + JS + PHP",
+      "difficulty": "Intermediate",
+      "deliveryDays": "3 Days",
+      "category": "fullstack",
+      "icon": "🏨",
+      "description": "Room browsing, availability calendar, booking form and a simple owner panel to manage reservations.",
+      "features": "Room listing & gallery | Availability calendar | Booking form validation | Owner panel | Email-style confirmation screen | Mobile responsive"
+    },
+    {
+      "code": "A105",
+      "title": "Machine Learning Price Predictor",
+      "price": 2299,
+      "tech": "Python + Scikit-Learn",
+      "difficulty": "Advanced",
+      "deliveryDays": "3 Days",
+      "category": "data",
+      "icon": "🧠",
+      "description": "Regression model that predicts prices from a real dataset, with a simple prediction UI.",
+      "features": "Cleaned dataset | Feature engineering | Trained regression model | Accuracy report | Prediction interface | Explained notebook"
+    },
+    {
+      "code": "A106",
+      "title": "Portfolio Website (Premium)",
+      "price": 899,
+      "tech": "HTML + CSS + JS",
+      "difficulty": "Beginner",
+      "deliveryDays": "1 Day",
+      "category": "design",
+      "icon": "💼",
+      "description": "Personal portfolio with animated hero, project grid, resume section and working contact form UI.",
+      "features": "Animated hero section | Project grid | Resume/skills section | Contact form UI | SEO-ready markup | Fully responsive"
+    },
+    {
+      "code": "A107",
+      "title": "Bank Management System",
+      "price": 999,
+      "tech": "C++ / Java",
+      "difficulty": "Beginner",
+      "deliveryDays": "1 Day",
+      "category": "programming",
+      "icon": "🏦",
+      "description": "Console-based banking project covering accounts, deposits, withdrawals and transaction history.",
+      "features": "Account creation | Deposit & withdrawal | Transaction history | File-based storage | Menu-driven UI | Well commented code"
+    },
+    {
+      "code": "A108",
+      "title": "Network Vulnerability Scan Report",
+      "price": 2799,
+      "tech": "Kali Linux + Nmap",
+      "difficulty": "Advanced",
+      "deliveryDays": "4 Days",
+      "category": "cyber",
+      "icon": "🔐",
+      "description": "Practical security audit project with scanning methodology, findings and remediation report.",
+      "features": "Scanning methodology | Vulnerability findings | Risk severity matrix | Remediation plan | Professional PDF report | Tool command reference"
+    },
+    {
+      "code": "A109",
+      "title": "Digital Marketing Campaign Plan",
+      "price": 1199,
+      "tech": "SEO + Google Ads",
+      "difficulty": "Beginner",
+      "deliveryDays": "2 Days",
+      "category": "marketing",
+      "icon": "📣",
+      "description": "Complete campaign documentation: keyword research, ad copies, budget plan and KPI tracking sheet.",
+      "features": "Keyword research sheet | Ad copy variants | Budget & bidding plan | Landing page checklist | KPI tracking template | Monthly report format"
+    },
+    {
+      "code": "A110",
+      "title": "Restaurant Ordering System",
+      "price": 1699,
+      "tech": "PHP + MySQL",
+      "difficulty": "Intermediate",
+      "deliveryDays": "2 Days",
+      "category": "fullstack",
+      "icon": "🍽️",
+      "description": "Digital menu, table-wise order placement, kitchen queue view and daily sales summary.",
+      "features": "Digital menu module | Table-wise ordering | Kitchen queue screen | Bill generation | Daily sales summary | Admin login"
+    },
+    {
+      "code": "A111",
+      "title": "AWS Cloud Deployment Project",
+      "price": 2599,
+      "tech": "AWS EC2 + S3",
+      "difficulty": "Advanced",
+      "deliveryDays": "4 Days",
+      "category": "cloud",
+      "icon": "☁️",
+      "description": "Deploy and document a web application on AWS with storage, security groups and monitoring.",
+      "features": "EC2 setup guide | S3 static hosting | Security group config | Domain & SSL steps | Monitoring setup | Architecture diagram"
+    },
+    {
+      "code": "A112",
+      "title": "Advanced Excel Business Dashboard",
+      "price": 799,
+      "tech": "Excel + Tally",
+      "difficulty": "Beginner",
+      "deliveryDays": "1 Day",
+      "category": "account",
+      "icon": "🧾",
+      "description": "Automated business dashboard with pivot tables, dynamic charts and GST-ready summaries.",
+      "features": "Pivot table setup | Dynamic charts | GST summary sheet | Automated formulas | Print-ready layout | Editable template"
+    }
+  ],
+  "reviews": [
+    {
+      "reviewerName": "Kartikesh Padhi",
+      "email": "kartikesh.padhi@students.vitc.in",
+      "rating": 5,
+      "comment": "Learning Advanced Excel and Tally at Vandana IT Courses was honestly a great experience. The trainers explained everything in a super simple way, and the hands-on practice made it way easier to actually understand stuff. Doubts were never a problem—they were always ready to help. If you wanna learn useful skills without boring lectures, this place is solid.",
+      "imageUrl": "assets/img/reviewers/kartikesh-padhi.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Hmua Hualngo",
+      "email": "hmua.hualngo@students.vitc.in",
+      "rating": 5,
+      "comment": "I completed the Basic Computer Course and Advance Excel course in Vandana IT Computer Centre, I am recommending this Centre for those who are applying for All India Level Job and State level Job. You will get a Central Government Approved Certificate and Marksheet. The Instructor teaches with professional experiences and skills. Thank you Dattaprasad sir.",
+      "imageUrl": "assets/img/reviewers/hmua-hualngo.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Neha Gaikwad",
+      "email": "neha.gaikwad@students.vitc.in",
+      "rating": 4,
+      "comment": "Excellent course! The explanations were clear and the interactive coding exercises really helped solidify the concepts. Great for beginners.",
+      "imageUrl": "assets/img/reviewers/neha-gaikwad.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Chaitanya",
+      "email": "chaitanya@students.vitc.in",
+      "rating": 5,
+      "comment": "#Hardware #Networking #Uran #Computer_Class_VITC #VITC It was a wonderful experience as I got to learn a lot of new things and there is more opportunities as I have been given chances for internships to learn more and experience the ways of hardware through internships.",
+      "imageUrl": "assets/img/reviewers/chaitanya.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Inder kumar Ram",
+      "email": "inder.kumar.ram@students.vitc.in",
+      "rating": 5,
+      "comment": "I was being taught Advanced Excel and practical example is pretty good if anyone want to join it's good.",
+      "imageUrl": "assets/img/reviewers/inder-kumar-ram.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Sparsh Raut",
+      "email": "sparsh.raut@students.vitc.in",
+      "rating": 5,
+      "comment": "Best Experience. And also excellent teaching. High Configuration Computer Lab.",
+      "imageUrl": "assets/img/reviewers/sparsh-raut.png",
+      "approved": true,
+      "featured": true,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Tanvi Mhatre",
+      "email": "tanvi.mhatre@students.vitc.in",
+      "rating": 5,
+      "comment": "Excellent coding classes with clear concepts, hands-on projects, and strong fundamentals. Highly recommended.",
+      "imageUrl": "assets/img/reviewers/tanvi-mhatre.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Bhavesh Gawand",
+      "email": "bhavesh.gawand@students.vitc.in",
+      "rating": 5,
+      "comment": "I had a very good experience learning here, and I strongly recommend others to experience it 👍",
+      "imageUrl": "assets/img/reviewers/bhavesh-gawand.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Sami Mirkar",
+      "email": "sami.mirkar@students.vitc.in",
+      "rating": 5,
+      "comment": "Had an incredible experience at VITC. From the very beginning, the instructors were not only knowledgeable but also genuinely passionate about teaching. The curriculum was well-structured, starting from the fundamentals and gradually building up to more advanced concepts, which made the learning process smooth and enjoyable.",
+      "imageUrl": "assets/img/reviewers/sami-mirkar.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Farhan",
+      "email": "farhan@students.vitc.in",
+      "rating": 5,
+      "comment": "Its a very wonderful coaching classes with highly skilled teacher and with great teaching experience.",
+      "imageUrl": "assets/img/reviewers/farhan.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Swed Mhatre",
+      "email": "swed.mhatre@students.vitc.in",
+      "rating": 5,
+      "comment": "#Best in the IT courses, Uran They teach on projector One-to-One experience.",
+      "imageUrl": "assets/img/reviewers/swed-mhatre.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Shwetalee Patil",
+      "email": "shwetalee.patil@students.vitc.in",
+      "rating": 5,
+      "comment": "VITC class stands out due to its personalized attention and well-structured explanations. The class ensures that students develop strong programming skills that are both practical and maintainable. This approach not only enhances comprehension but also builds a solid foundation for future coding and problem-solving.",
+      "imageUrl": "assets/img/reviewers/shwetalee-patil.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Tanmay Raghuvir",
+      "email": "tanmay.raghuvir@students.vitc.in",
+      "rating": 5,
+      "comment": "Dattaprasad Sir Best Trainer and Mentor at VITC | 9 Year Experience.",
+      "imageUrl": "assets/img/reviewers/tanmay-raghuvir.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Pranay Mhatre",
+      "email": "pranay.mhatre@students.vitc.in",
+      "rating": 5,
+      "comment": "Corel Draw: Excellent for vector graphics, good for logo/print, some learning curve. Photoshop: Industry-standard for photo editing, versatile, many learning resources. VITC Uran Best Quality Teaching Faculty.",
+      "imageUrl": "assets/img/reviewers/pranay-mhatre.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Krutika Patil",
+      "email": "krutika.patil@students.vitc.in",
+      "rating": 5,
+      "comment": "Wonderful experience and teaching staff is great. I got more knowledge about IT programming. VITC is good for college students must visit 👍",
+      "imageUrl": "assets/img/reviewers/krutika-patil.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Sara Bhoir",
+      "email": "sara.bhoir@students.vitc.in",
+      "rating": 5,
+      "comment": "Studied basic computer and advanced excel had a great experience studying.",
+      "imageUrl": "assets/img/reviewers/sara-bhoir.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Rohit Mhatre",
+      "email": "rohit.mhatre@students.vitc.in",
+      "rating": 5,
+      "comment": "Wonderful teaching and good teaching staff all types of courses available must visit.",
+      "imageUrl": "assets/img/reviewers/rohit-mhatre.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    },
+    {
+      "reviewerName": "Nitin Gawand",
+      "email": "nitin.gawand@students.vitc.in",
+      "rating": 5,
+      "comment": "I'm delighted to hear this. Your dedication and efforts truly made teaching enjoyable. Thank you.",
+      "imageUrl": "assets/img/reviewers/nitin-gawand.png",
+      "approved": true,
+      "featured": false,
+      "courseTitle": ""
+    }
+  ],
+  "faqs": [
+    {
+      "question": "What exactly do I receive after purchase?",
+      "answer": "You receive the complete source code, project documentation, setup guide, screenshots and a walkthrough session with a VITC mentor.",
+      "category": "assignments",
+      "displayOrder": 0
+    },
+    {
+      "question": "Are these assignments plagiarism-free?",
+      "answer": "Yes. Every project is built in-house by VITC mentors and is customised for you before delivery.",
+      "category": "assignments",
+      "displayOrder": 1
+    },
+    {
+      "question": "How fast is the delivery?",
+      "answer": "Delivery time is listed on each assignment card — typically between 1 and 4 days after purchase.",
+      "category": "assignments",
+      "displayOrder": 2
+    },
+    {
+      "question": "Can I request customisation?",
+      "answer": "Yes. Minor customisations such as module naming, colours and dataset changes are included free of cost.",
+      "category": "assignments",
+      "displayOrder": 3
+    },
+    {
+      "question": "Do you explain the project to me?",
+      "answer": "Absolutely. Each purchase includes a live explanation session so you can confidently present and defend the project.",
+      "category": "assignments",
+      "displayOrder": 4
+    },
+    {
+      "question": "What support do I get after delivery?",
+      "answer": "You get 15 days of free support for installation issues, bug fixes and viva preparation.",
+      "category": "assignments",
+      "displayOrder": 5
+    },
+    {
+      "question": "Do you offer both online and offline classes?",
+      "answer": "Yes. We run offline classes at our Uran centre and hybrid/online batches for working professionals.",
+      "category": "contact",
+      "displayOrder": 6
+    },
+    {
+      "question": "Do I get a certificate after completing a course?",
+      "answer": "Yes, every student receives a course completion certificate along with project & internship certificates where applicable.",
+      "category": "contact",
+      "displayOrder": 7
+    },
+    {
+      "question": "What is the placement support like?",
+      "answer": "We help with resume building, LinkedIn optimisation, mock interviews, and referrals to our hiring partners.",
+      "category": "contact",
+      "displayOrder": 8
+    },
+    {
+      "question": "Can I pay the fees in installments?",
+      "answer": "Yes, we offer flexible installment options. Please contact our counsellor for details.",
+      "category": "contact",
+      "displayOrder": 9
+    },
+    {
+      "question": "Are there any prerequisites to join?",
+      "answer": "Most courses start from basics — no prior experience needed. Advanced tracks may have prerequisites.",
+      "category": "contact",
+      "displayOrder": 10
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "Kartikesh Padhi",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/kartikesh-padhi.png",
+      "rating": 5,
+      "message": "Learning Advanced Excel and Tally at Vandana IT Courses was honestly a great experience. The trainers explained everything in a super simple way, and the hands-on practice made it way easier to actually understand stuff. Doubts were never a problem—they were always ready to help. If you wanna learn useful skills without boring lectures, this place is solid.",
+      "approved": true
+    },
+    {
+      "name": "Hmua Hualngo",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/hmua-hualngo.png",
+      "rating": 5,
+      "message": "I completed the Basic Computer Course and Advance Excel course in Vandana IT Computer Centre, I am recommending this Centre for those who are applying for All India Level Job and State level Job. You will get a Central Government Approved Certificate and Marksheet. The Instructor teaches with professional experiences and skills. Thank you Dattaprasad sir.",
+      "approved": true
+    },
+    {
+      "name": "Neha Gaikwad",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/neha-gaikwad.png",
+      "rating": 4,
+      "message": "Excellent course! The explanations were clear and the interactive coding exercises really helped solidify the concepts. Great for beginners.",
+      "approved": true
+    },
+    {
+      "name": "Chaitanya",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/chaitanya.png",
+      "rating": 5,
+      "message": "#Hardware #Networking #Uran #Computer_Class_VITC #VITC It was a wonderful experience as I got to learn a lot of new things and there is more opportunities as I have been given chances for internships to learn more and experience the ways of hardware through internships.",
+      "approved": true
+    },
+    {
+      "name": "Inder kumar Ram",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/inder-kumar-ram.png",
+      "rating": 5,
+      "message": "I was being taught Advanced Excel and practical example is pretty good if anyone want to join it's good.",
+      "approved": true
+    },
+    {
+      "name": "Sparsh Raut",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/sparsh-raut.png",
+      "rating": 5,
+      "message": "Best Experience. And also excellent teaching. High Configuration Computer Lab.",
+      "approved": true
+    },
+    {
+      "name": "Tanvi Mhatre",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/tanvi-mhatre.png",
+      "rating": 5,
+      "message": "Excellent coding classes with clear concepts, hands-on projects, and strong fundamentals. Highly recommended.",
+      "approved": true
+    },
+    {
+      "name": "Bhavesh Gawand",
+      "role": "VITC Student",
+      "photoUrl": "assets/img/reviewers/bhavesh-gawand.png",
+      "rating": 5,
+      "message": "I had a very good experience learning here, and I strongly recommend others to experience it 👍",
+      "approved": true
+    }
+  ],
+  "pricingPlans": [
+    {
+      "name": "Beginner Package",
+      "tagline": "For absolute beginners starting their IT journey.",
+      "price": 7999,
+      "currency": "₹",
+      "billingPeriod": "one-time",
+      "category": "course",
+      "displayOrder": 1,
+      "highlighted": false,
+      "features": "1 core language | Mini projects | Certificate | 2 months support"
+    },
+    {
+      "name": "Professional Package",
+      "tagline": "For freshers targeting their first job.",
+      "price": 18999,
+      "oldPrice": 23999,
+      "currency": "₹",
+      "billingPeriod": "one-time",
+      "category": "course",
+      "displayOrder": 2,
+      "highlighted": true,
+      "features": "Full Stack track | Live projects | Interview prep | Placement support"
+    },
+    {
+      "name": "Advanced Package",
+      "tagline": "For specialists going deep into one domain.",
+      "price": 21999,
+      "currency": "₹",
+      "billingPeriod": "one-time",
+      "category": "course",
+      "displayOrder": 3,
+      "highlighted": false,
+      "features": "Data Science / Cyber track | Capstone project | Certificate | 6 months support"
+    },
+    {
+      "name": "Assignment Pack",
+      "tagline": "Ready-made academic projects with mentoring.",
+      "price": 2499,
+      "currency": "₹",
+      "billingPeriod": "per project",
+      "category": "assignment",
+      "displayOrder": 4,
+      "highlighted": false,
+      "features": "Source code | Documentation | Walkthrough session | 15 days support"
+    }
+  ],
+  "galleryItems": [
+    {
+      "title": "Classroom Sessions",
+      "imageUrl": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&auto=format&fit=crop",
+      "category": "classroom",
+      "caption": "Classroom Sessions"
+    },
+    {
+      "title": "Computer Lab",
+      "imageUrl": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop",
+      "category": "lab",
+      "caption": "Computer Lab"
+    },
+    {
+      "title": "Workshops",
+      "imageUrl": "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&auto=format&fit=crop",
+      "category": "workshop",
+      "caption": "Workshops"
+    },
+    {
+      "title": "Guest Sessions",
+      "imageUrl": "https://images.unsplash.com/photo-1560439514-4e9645039924?w=600&auto=format&fit=crop",
+      "category": "guest",
+      "caption": "Guest Sessions"
+    },
+    {
+      "title": "Student Activities",
+      "imageUrl": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop",
+      "category": "activity",
+      "caption": "Student Activities"
+    },
+    {
+      "title": "Live Projects",
+      "imageUrl": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop",
+      "category": "project",
+      "caption": "Live Projects"
+    },
+    {
+      "title": "Placement Moments",
+      "imageUrl": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop",
+      "category": "placement",
+      "caption": "Placement Moments"
+    },
+    {
+      "title": "Events",
+      "imageUrl": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop",
+      "category": "event",
+      "caption": "Events"
+    },
+    {
+      "title": "Classroom Discussion",
+      "imageUrl": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&auto=format&fit=crop",
+      "category": "classroom",
+      "caption": "Classroom Discussion"
+    },
+    {
+      "title": "Coding Lab",
+      "imageUrl": "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&auto=format&fit=crop",
+      "category": "lab",
+      "caption": "Coding Lab"
+    },
+    {
+      "title": "Hands-on Workshop",
+      "imageUrl": "https://images.unsplash.com/photo-1552581234-26160f608093?w=600&auto=format&fit=crop",
+      "category": "workshop",
+      "caption": "Hands-on Workshop"
+    },
+    {
+      "title": "Group Project",
+      "imageUrl": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop",
+      "category": "project",
+      "caption": "Group Project"
+    }
+  ],
+  "blogPosts": [
+    {
+      "slug": "how-to-choose-your-first-it-career-path",
+      "title": "How to Choose Your First IT Career Path",
+      "excerpt": "Confused between development, data, cloud and cyber security? Here is a simple framework our mentors use with every new VITC student.",
+      "content": "<p>Every year we meet students in Uran and Navi Mumbai who know they want an IT career but have no idea which door to walk through. The good news: you do not need to decide forever. You only need to decide what to learn first.</p><h2>1. Start from the work, not the job title</h2><p>Ask yourself which of these you would happily do for eight hours: building screens people click, finding patterns inside data, keeping servers and networks alive, or protecting systems from attackers. Your honest answer already narrows four fields down to one.</p><h2>2. Match the path to your background</h2><ul><li>Commerce background: Advanced Excel, Tally Prime and Data Analytics are the fastest bridge.</li><li>Science / engineering: Full Stack Development, Python or Data Science &amp; AI.</li><li>Creative mindset: Graphic Designing or Digital Marketing.</li><li>Hands-on, practical mindset: Hardware, Networking and Cloud Computing.</li></ul><h2>3. Test before you commit</h2><p>Spend two weeks on a free tutorial in your shortlisted field. If you still enjoy it on day fourteen, enrol. At VITC every course begins with a free counselling session precisely so you do not waste a year on the wrong track.</p><h2>4. Plan for the first job, not the dream job</h2><p>Your first role only needs to get you inside the industry. Choose the path with the shortest credible route to a junior role, then grow. Most of our placed students switched specialisation once within three years — and that is perfectly normal.</p>",
+      "coverImageUrl": "assets/img/blog/career-path.jpg",
+      "author": "VITC Mentor Team",
+      "tags": "Career Guidance",
+      "published": true,
+      "publishedAt": "2026-01-12T09:30:00"
+    },
+    {
+      "slug": "python-vs-java-2026",
+      "title": "Python vs Java in 2026: Which One Should You Learn?",
+      "excerpt": "Both languages hire well in India. The right choice depends on the kind of team you want to join — here is an honest comparison.",
+      "content": "<p>This is the single most common question in our counselling room. The short answer: learn Python if you want speed and variety, learn Java if you want enterprise depth and stability.</p><h2>Where Python wins</h2><ul><li>Data science, machine learning and AI work is Python-first.</li><li>Automation, scripting and quick prototypes.</li><li>Gentler syntax — beginners write useful programs within weeks.</li></ul><h2>Where Java wins</h2><ul><li>Large banking, insurance and product companies still run on Java and Spring Boot.</li><li>Android development and huge backend systems.</li><li>Strong typing teaches discipline that transfers to every other language.</li></ul><h2>Our recommendation</h2><p>If you are targeting analytics, AI or a fast start, begin with Python. If you are targeting a service company or a core backend role, begin with Java and Spring Boot. Whichever you pick, finish it properly — recruiters hire depth, not a list of half-learned languages.</p>",
+      "coverImageUrl": "assets/img/blog/python-vs-java.jpg",
+      "author": "Dattaprasad Sir",
+      "tags": "Programming",
+      "published": true,
+      "publishedAt": "2026-01-05T10:00:00"
+    },
+    {
+      "slug": "ai-skills-every-fresher-should-learn",
+      "title": "AI Skills Every Fresher Should Learn",
+      "excerpt": "You do not need a PhD to work with AI. These practical skills are what hiring managers actually ask freshers about in 2026.",
+      "content": "<p>AI has stopped being a specialist subject. Marketing executives, accountants and support engineers are all expected to use it. Here is the realistic skill list for a fresher.</p><h2>The core four</h2><ul><li>Python basics — lists, functions, files and pandas.</li><li>Data cleaning — eighty percent of real AI work is preparing data.</li><li>Prompt engineering — writing precise instructions for language models and validating the output.</li><li>Model intuition — knowing when classification, regression or clustering fits the problem.</li></ul><h2>What matters more than the algorithm</h2><p>Show that you can explain a result to a non-technical person. In interviews we see candidates who can train a model but cannot say why the business should trust it. Practise writing a five-line summary of every project you build.</p><h2>Build three small projects</h2><p>A sales forecast, a text classifier and a simple recommendation tool are enough to demonstrate range. Publish them with a clear README — that repository becomes your portfolio.</p>",
+      "coverImageUrl": "assets/img/blog/ai-skills.jpg",
+      "author": "VITC Data Science Faculty",
+      "tags": "Artificial Intelligence",
+      "published": true,
+      "publishedAt": "2025-12-22T11:15:00"
+    },
+    {
+      "slug": "building-your-first-data-analytics-portfolio",
+      "title": "Building Your First Data Analytics Portfolio",
+      "excerpt": "Three well-documented projects beat ten certificates. Here is exactly what to build and how to present it.",
+      "content": "<p>A portfolio is proof of work. Certificates say you attended; a portfolio says you can deliver. Here is the structure we ask every VITC analytics student to follow.</p><h2>Project 1 — the clean-up</h2><p>Take a messy public dataset, document every cleaning decision, and publish a before-and-after summary. This shows discipline, which is what analytics teams hire for.</p><h2>Project 2 — the dashboard</h2><p>Build an interactive dashboard in Excel, Power BI or Python. Pick a topic you can talk about confidently: local business sales, cricket statistics, college admissions.</p><h2>Project 3 — the recommendation</h2><p>End with a project that concludes in a decision: which product to stock, which customers to retain. Analysts are paid for recommendations, not charts.</p><h2>How to present it</h2><ul><li>One page per project: problem, data, method, result.</li><li>Screenshots at the top — recruiters scan before they read.</li><li>A link in your resume header, not buried at the bottom.</li></ul>",
+      "coverImageUrl": "assets/img/blog/data-portfolio.jpg",
+      "author": "VITC Data Science Faculty",
+      "tags": "Data Science",
+      "published": true,
+      "publishedAt": "2025-12-08T09:00:00"
+    },
+    {
+      "slug": "seo-for-beginners-30-day-roadmap",
+      "title": "SEO for Beginners: A 30-Day Roadmap",
+      "excerpt": "A week-by-week plan to go from zero to running real search campaigns — the same roadmap we use in our Digital Marketing batch.",
+      "content": "<p>SEO rewards consistency more than talent. Follow this thirty-day plan on one real website — your own blog, a family business, or a college club page.</p><h2>Week 1 — foundations</h2><ul><li>How search engines crawl, index and rank.</li><li>Set up Google Search Console and Analytics.</li><li>Run your first technical audit.</li></ul><h2>Week 2 — keywords</h2><ul><li>Build a keyword sheet with intent columns.</li><li>Map one keyword to one page.</li><li>Study the competitors ranking in the top five.</li></ul><h2>Week 3 — on-page</h2><ul><li>Rewrite titles and meta descriptions.</li><li>Fix heading structure and internal links.</li><li>Compress images and improve page speed.</li></ul><h2>Week 4 — off-page and reporting</h2><ul><li>Local listings and Google Business Profile.</li><li>Earn your first three genuine backlinks.</li><li>Build a one-page monthly report.</li></ul><p>At the end of the month you will have measurable rankings to show in an interview — far more convincing than a theory certificate.</p>",
+      "coverImageUrl": "assets/img/blog/seo-roadmap.jpg",
+      "author": "VITC Digital Marketing Faculty",
+      "tags": "Digital Marketing",
+      "published": true,
+      "publishedAt": "2025-11-26T08:45:00"
+    },
+    {
+      "slug": "resume-and-interview-tips-for-it-freshers",
+      "title": "Resume and Interview Tips for IT Freshers",
+      "excerpt": "What recruiters in Navi Mumbai actually look for in a fresher resume, and how to answer the questions that decide the offer.",
+      "content": "<p>Our placement cell reviews hundreds of fresher resumes every year. The same fixable mistakes appear again and again.</p><h2>The resume</h2><ul><li>One page. Always.</li><li>Projects above education — they are your only real evidence.</li><li>Write results, not duties: “reduced report time from 2 hours to 10 minutes”.</li><li>Skills section split into Strong and Familiar — honesty survives the technical round.</li><li>No photo, no age, no marital status, no colourful template.</li></ul><h2>The interview</h2><p>Prepare a two-minute introduction, one deep project story, and three questions to ask them. When you do not know an answer, say so and explain how you would find out — interviewers respect that far more than a guess.</p><h2>After the interview</h2><p>Send a short thank-you email the same day. It costs nothing and it is remembered surprisingly often.</p>",
+      "coverImageUrl": "assets/img/blog/resume-interview.jpg",
+      "author": "VITC Placement Cell",
+      "tags": "Resume Tips",
+      "published": true,
+      "publishedAt": "2025-11-10T10:30:00"
+    }
+  ]
+}

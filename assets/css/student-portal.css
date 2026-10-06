@@ -1,0 +1,341 @@
+/* =======================================================================
+   VITC Student Portal — accessibility & responsive supplement
+   PART 1/2 (Accessibility & Responsive Quality Audit)
+
+   Loaded ONLY by the authenticated Student pages:
+     student-dashboard.html, student-course.html, student-profile.html
+   It is linked AFTER assets/css/style.css and every rule below is scoped to
+   a Student-portal-only hook (.student-portal / #studentDashboard /
+   #studentCoursePage / #studentProfilePage / .sp-skip-link), so the public
+   VITC website styling is untouched.
+   ======================================================================= */
+
+/* =======================================================================
+   Student Admin Panel — Sidebar shell (LMS-style redesign)
+
+   The public header/nav, public footer, marketing floats (WhatsApp/call/
+   email/back-to-top) and the "Free Career Counselling" promo popup have
+   been removed from the markup of student-dashboard.html /
+   student-course.html / student-profile.html entirely. That markup is
+   duplicated static HTML per public page (not a shared include), so
+   deleting it here never touches the public website, Main Admin or
+   Teacher Admin. assets/js/main.js only ever null-checks for these
+   elements (`if (el) ...`), so removing them causes no console errors.
+
+   Everything below is scoped under body.student-portal / .sa-* classes
+   and reuses the existing :root tokens from style.css (--primary, --muted,
+   --border, --shadow-lg, --container) — no public token is overridden.
+   ======================================================================= */
+
+body.student-portal{background:#f3f6fc}
+
+.sa-shell{display:flex;min-height:100vh}
+
+/* ---- Sidebar (Student Admin navigation) ---- */
+.sa-sidebar{
+  width:264px;flex-shrink:0;
+  background:linear-gradient(180deg,#0B3D91,#061e52);
+  display:flex;flex-direction:column;
+  padding:22px 16px 20px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sa-brand{display:flex;align-items:center;gap:12px;padding:6px 8px 20px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.14);margin-bottom:18px}
+.sa-brand:hover{color:inherit}
+.sa-brand img{width:42px;height:42px;border-radius:10px;background:#fff;padding:3px;flex-shrink:0}
+.sa-brand-text{display:flex;flex-direction:column;font-family:'Montserrat','Poppins',sans-serif;font-weight:800;color:#fff;font-size:1.05rem;line-height:1.25}
+.sa-brand-text small{font-family:'Poppins',sans-serif;font-weight:500;font-size:.66rem;color:rgba(255,255,255,.65);letter-spacing:.02em}
+
+.sa-nav{display:flex;flex-direction:column;gap:6px;flex:1 1 auto}
+.sa-nav .ssn-link,
+.sa-logout.ssn-link{
+  display:flex;align-items:center;gap:12px;
+  width:100%;background:transparent;border:1px solid transparent;
+  color:rgba(255,255,255,.82);font-size:.92rem;font-weight:600;
+  padding:11px 14px;border-radius:10px;text-align:left;
+}
+.sa-nav .ssn-link:hover{background:rgba(255,255,255,.08);border-color:transparent;color:#fff}
+.sa-nav .ssn-link.ssn-active{background:#fff;color:var(--primary);border-color:transparent}
+.sa-nav-ico{font-size:1.05rem;line-height:1;width:20px;text-align:center;flex-shrink:0}
+.sa-logout.ssn-link{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);border-radius:10px;color:#ffb4ae}
+.sa-logout.ssn-link:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* ---- Sidebar section labels (Learning / Account groups) ---- */
+.sa-nav-label{
+  margin:16px 0 4px;padding:0 14px;
+  font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);
+}
+.sa-nav-label:first-of-type{margin-top:8px}
+
+/* ---- Student Admin header bar (student name + avatar, above page head) ---- */
+.sa-header{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 20px;max-width:var(--container);margin:0 auto 6px;
+  border-bottom:1px solid var(--border);
+}
+.sa-header-tag{font-size:.76rem;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.sa-header-user{display:flex;align-items:center;gap:10px}
+.sa-header-avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:var(--grad-btn);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.76rem;letter-spacing:.02em;
+}
+.sa-header-name{font-weight:700;font-size:.92rem;color:var(--text)}
+@media (max-width:520px){
+  .sa-header-tag{display:none}
+  .sa-header{padding:12px 14px}
+}
+
+/* ---- Mobile topbar + drawer (hidden on desktop) ---- */
+.sa-topbar{display:none}
+.sa-backdrop{display:none}
+
+/* ---- Main content column ---- */
+.sa-main{flex:1 1 auto;min-width:0;padding:34px 0 60px}
+.sa-page-head{padding:0 20px 22px;max-width:var(--container);margin:0 auto}
+.sa-page-head h1{font-size:clamp(1.5rem,3vw,2rem);margin-bottom:6px}
+.sa-page-head p{margin:0}
+.sa-crumb{margin-top:10px;font-size:.85rem;color:var(--muted)}
+.sa-crumb a{color:var(--primary);font-weight:600}
+
+@media (max-width:960px){
+  .sa-shell{display:block}
+  .sa-sidebar{
+    position:fixed;top:0;left:0;height:100vh;z-index:1200;
+    transform:translateX(-100%);transition:transform .3s ease;
+    box-shadow:var(--shadow-lg);
+  }
+  .sa-sidebar.open{transform:translateX(0)}
+  .sa-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(6,18,46,.55);z-index:1100;
+  }
+  .sa-backdrop.open{display:block}
+  .sa-topbar{
+    display:flex;align-items:center;gap:14px;
+    position:sticky;top:0;z-index:1000;
+    background:linear-gradient(135deg,#0B3D91,#061e52);
+    padding:14px 18px;
+  }
+  .sa-menu-btn{background:transparent;border:0;padding:6px;display:flex;flex-direction:column;gap:5px;cursor:pointer}
+  .sa-menu-btn span{display:block;width:22px;height:2.5px;background:#fff;border-radius:2px}
+  .sa-topbar-brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;text-decoration:none;font-size:.95rem}
+  .sa-topbar-brand:hover{color:#fff}
+  .sa-topbar-brand img{width:32px;height:32px;border-radius:8px;background:#fff;padding:2px}
+  .sa-main{padding-top:24px}
+}
+
+@media (max-width:390px){
+  .sa-page-head{padding-left:14px;padding-right:14px}
+}
+
+/* ---------- Skip link: first tab stop on every Student portal page ---------- */
+.sp-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 999;
+  background: #fff;
+  color: #0B3D91;
+  border: 2px solid #0B3D91;
+  border-radius: 0 0 10px 0;
+  padding: 10px 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.sp-skip-link:focus {
+  left: 0;
+}
+#studentDashboard:focus,
+#studentCoursePage:focus,
+#studentProfilePage:focus {
+  outline: none;
+}
+
+/* ---------- Keyboard focus visibility inside the portal only ---------- */
+#studentDashboard a:focus-visible,
+#studentDashboard button:focus-visible,
+#studentDashboard input:focus-visible,
+#studentDashboard select:focus-visible,
+#studentCoursePage a:focus-visible,
+#studentCoursePage button:focus-visible,
+#studentCoursePage input:focus-visible,
+#studentCoursePage select:focus-visible,
+#studentCoursePage [tabindex]:focus-visible,
+#studentProfilePage a:focus-visible,
+#studentProfilePage button:focus-visible,
+#studentProfilePage input:focus-visible,
+#studentProfilePage select:focus-visible,
+#studentProfilePage label.profile-avatar-edit:focus-within {
+  outline: 3px solid #0B3D91;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ---------- Tap targets: portal controls stay reachable on phones ---------- */
+@media (max-width: 640px) {
+  #studentDashboard .ssn-link,
+  #studentCoursePage .ssn-link,
+  #studentProfilePage .ssn-link,
+  #studentDashboard .student-filter-tab,
+  #studentCoursePage .lesson-row,
+  #studentCoursePage .module-head {
+    min-height: 44px;
+  }
+  #studentCoursePage .lesson-actions .btn,
+  #studentDashboard .student-course-cta {
+    min-height: 44px;
+  }
+}
+
+/* ---------- Long unbroken strings (emails / IDs / lesson titles) never
+     push the portal wider than the viewport ---------- */
+#studentDashboard,
+#studentCoursePage,
+#studentProfilePage {
+  overflow-x: hidden;
+}
+#studentDashboard .student-course-card,
+#studentDashboard .student-welcome-who,
+#studentCoursePage .lesson-row,
+#studentCoursePage #lessonTitle,
+#studentProfilePage .student-cred-grid b,
+#studentProfilePage .profile-readonly-grid b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 360px small-phone spacing ---------- */
+@media (max-width: 390px) {
+  #studentDashboard .container,
+  #studentCoursePage .container,
+  #studentProfilePage .container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  #studentCoursePage .course-topbar-actions {
+    width: 100%;
+  }
+  #studentCoursePage .course-topbar-actions .btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
+/* ---------- Video player: keeps its 16/9 box and never overflows ---------- */
+#studentCoursePage .video-frame {
+  max-width: 100%;
+}
+#studentCoursePage .video-frame video:focus-visible,
+#studentCoursePage .video-frame iframe:focus-visible {
+  outline: 3px solid #F5A524;
+  outline-offset: -3px;
+}
+
+/* ---------- Status is never colour-only: progress + state pills carry text
+     (rendered by student.js); this only strengthens their contrast ---------- */
+#studentDashboard .pill,
+#studentDashboard .progress-label,
+#studentCoursePage #courseProgressText {
+  font-weight: 700;
+}
+
+/* ---------- Reduced motion: honour the OS setting inside the portal ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #studentDashboard *,
+  #studentCoursePage *,
+  #studentProfilePage * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  #studentDashboard .reveal,
+  #studentCoursePage .reveal,
+  #studentProfilePage .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ================= PART 5/6 — Student Profile & Settings ================= */
+#studentProfilePage .sp-section-head,
+#studentSettingsPage .sp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#studentProfilePage .sp-edit-btn {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: .9rem;
+}
+#studentProfilePage .sp-form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#studentProfilePage #profileEditWrap {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(11, 61, 145, .12);
+}
+#studentProfilePage .sp-stat-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 18px;
+}
+#studentProfilePage .sp-stat {
+  background: #f6f8fd;
+  border: 1px solid rgba(11, 61, 145, .12);
+  border-radius: 14px;
+  padding: 16px;
+  min-width: 0;
+}
+#studentProfilePage .sp-stat small {
+  display: block;
+  color: var(--muted);
+  font-size: .78rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+#studentProfilePage .sp-stat b {
+  font-family: Montserrat, sans-serif;
+  font-size: 1.6rem;
+  color: #0B3D91;
+  line-height: 1;
+}
+#studentProfilePage .sp-progress {
+  height: 12px;
+  border-radius: 999px;
+  background: #e7ecf7;
+  overflow: hidden;
+}
+#studentProfilePage .sp-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0B3D91, #F5A524);
+  transition: width .4s ease;
+}
+#studentSettingsPage:focus { outline: none; }
+#studentSettingsPage .profile-readonly-grid b {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#studentSettingsPage a:focus-visible,
+#studentSettingsPage button:focus-visible {
+  outline: 3px solid #0B3D91;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #studentSettingsPage *,
+  #studentProfilePage .sp-progress > span {
+    transition-duration: .001ms !important;
+  }
+}

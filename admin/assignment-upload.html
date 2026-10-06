@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-store"><meta name="robots" content="noindex, nofollow"><title>Assignment Upload | VITC Admin</title><link rel="stylesheet" href="assets/admin.css?v=p6"></head>
+<body><script src="assets/admin.js?v=p8"></script><script>
+(function () {
+  var esc = Admin.esc;
+  var mount = Admin.renderShell('assignment-upload', 'Assignment Upload');
+  if (!mount) return;
+
+  /* Fulfilment states of an assignment order. A paid purchase not opened for delivery yet
+     (bought before this page existed) shows as FULFILLMENT_PENDING instead. */
+  var STATUSES = ['PENDING', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED'];
+  var STATUS_LABEL = { PENDING: 'Pending', IN_PROGRESS: 'In progress', DELIVERED: 'Delivered', CANCELLED: 'Cancelled' };
+  var ACCEPT = '.zip,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv';
+  var FILE_HINT = 'One file, up to 200MB — zip the source code, report and database together. ' +
+    'ZIP, PDF, Word, Excel, PowerPoint, TXT or CSV.';
+
+  var assignments = [];
+  var orders = [];
+  var filter = '';
+
+  mount.innerHTML =
+    '<div class="card" style="margin-bottom:16px"><strong>How it works</strong>' +
+      '<p class="muted" style="margin:6px 0 0">Upload the project file for each assignment once. Everyone who buys that ' +
+      'assignment then gets a private download link by email automatically, right after paying. Buyers who paid ' +
+      'before the file was uploaded are listed under <b>Buyer orders</b> below.</p></div>' +
+    '<div class="toolbar"><div class="left"><strong>Your assignments</strong>' +
+      '<input class="search" id="search" type="search" placeholder="Search assignments…">' +
+      '<span class="muted" id="count"></span></div></div>' +
+    '<div class="table-wrap" id="assignmentsTable"></div>' +
+    '<div class="toolbar" style="margin-top:28px"><div class="left"><strong>Buyer orders</strong>' +
+      '<span class="muted">Paid assignment orders — upload a custom file for one buyer, or resend their link.</span></div></div>' +
+    '<div class="table-wrap" id="ordersTable"></div>';
+
+  /* Small table renderer: columns [{label, render(row)}], actions [{label, className, visible, onClick}]. */
+  function renderTable(host, columns, rows, actions, emptyText) {
+    if (!rows.length) {
+      host.innerHTML = '<div class="empty">' + esc(emptyText) + '</div>';
+      return;
+    }
+    host.innerHTML = '<table><thead><tr>' +
+      columns.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') +
+      '<th class="right">Actions</th></tr></thead><tbody></tbody></table>';
+    var tbody = host.querySelector('tbody');
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = columns.map(function (c) { return '<td>' + c.render(r) + '</td>'; }).join('') +
+        '<td class="actions">' + actions.map(function (a, i) {
+          if (a.visible && !a.visible(r)) return '';
+          var label = typeof a.label === 'function' ? a.label(r) : a.label;
+          return '<button class="btn btn-sm ' + (a.className || '') + '" data-act="' + i + '">' + esc(label) + '</button>';
+        }).join(' ') + '</td>';
+      tr.querySelectorAll('[data-act]').forEach(function (b) {
+        b.addEventListener('click', async function () {
+          b.disabled = true;
+          try { await actions[Number(b.getAttribute('data-act'))].onClick(r); }
+          catch (e) { Admin.toast(e.message, 'err'); }
+          b.disabled = false;
+        });
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function times(n) { n = n || 0; return n + ' time' + (n === 1 ? '' : 's'); }
+
+  /* ======================= Your assignments (one file per assignment) ======================= */
+
+  function drawAssignments() {
+    var view = assignments.filter(function (a) {
+      return !filter || (a.title + ' ' + a.code + ' ' + (a.fileName || '')).toLowerCase().indexOf(filter) >= 0;
+    });
+    mount.querySelector('#count').textContent = view.length + ' of ' + assignments.length + ' assignments';
+    renderTable(mount.querySelector('#assignmentsTable'), [
+      { label: 'Assignment', render: function (a) {
+          return '<strong>' + esc(a.title) + '</strong><div class="muted">' + esc(a.code) +
+            (a.active === false ? ' · hidden from website' : '') + '</div>'; } },
+      { label: 'Price', render: function (a) { return Admin.money(a.price); } },
+      { label: 'Project file', render: function (a) {
+          return a.fileName
+            ? '<span class="badge badge-ok">Uploaded</span><div class="muted">' + esc(a.fileName) + ' · ' +
+              Admin.bytes(a.sizeBytes) + ' · ' + Admin.date(a.uploadedAt) + '</div>'
+            : '<span class="badge badge-warn">No file yet</span>'; } },
+      { label: 'Buyers', render: function (a) {
+          return (a.deliveredOrders || 0) + ' delivered' +
+            (a.waitingOrders ? '<div><span class="badge badge-warn">' + a.waitingOrders + ' waiting</span></div>' : ''); } }
+    ], view, [
+      { label: function (a) { return a.fileName ? 'Replace file' : 'Upload file'; }, className: 'btn-primary',
+        onClick: uploadAssignmentFile },
+      { label: 'Remove', className: 'btn-danger', visible: function (a) { return !!a.fileName; },
+        onClick: removeAssignmentFile }
+    ], assignments.length ? 'No assignment matches your search.' : 'No assignments yet. Add them under Catalogue → Assignments.');
+  }
+
+  function uploadAssignmentFile(a) {
+    Admin.openModal((a.fileName ? 'Replace project file — ' : 'Upload project file — ') + a.title,
+      '<div class="field"><label for="afFile">Project file *</label>' +
+        '<input id="afFile" type="file" required accept="' + ACCEPT + '">' +
+        '<div class="muted" style="font-size:12px;margin-top:4px">' + esc(FILE_HINT) + '</div></div>' +
+      (a.waitingOrders
+        ? '<div class="field checkline"><input type="checkbox" id="afSend" checked>' +
+          '<label for="afSend" style="margin:0">Also send it now to the ' + a.waitingOrders + ' buyer' +
+          (a.waitingOrders === 1 ? '' : 's') + ' waiting for this assignment</label></div>'
+        : '') +
+      '<p class="muted" style="font-size:12px">From now on, everyone who buys “' + esc(a.title) + '” gets this file ' +
+      'by email automatically, right after paying.' +
+      (a.fileName ? ' Buyers who already received the old file keep their links.' : '') + '</p>',
+      async function (m, close) {
+        var file = m.querySelector('#afFile').files[0];
+        if (!file) throw new Error('Choose the project file to upload.');
+        var send = m.querySelector('#afSend');
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('sendToWaitingBuyers', send ? String(send.checked) : 'false');
+        var btn = m.querySelector('button[type="submit"]');
+        btn.textContent = 'Uploading…';
+        try {
+          var res = await Admin.api.post('/admin/assignment-files/' + a.id, fd);
+          close();
+          var msg = 'Project file uploaded for ' + a.title;
+          if (res.sentToWaitingBuyers) msg += ' and sent to ' + res.sentToWaitingBuyers + ' waiting buyer(s)';
+          Admin.toast(msg, 'ok');
+          if (res.emailsFailed) {
+            Admin.toast(res.emailsFailed + ' email(s) could not be sent — use “Resend link” under Buyer orders ' +
+              'after checking Email / SMTP Settings.', 'err');
+          }
+          load();
+        } finally {
+          btn.textContent = 'Upload';
+        }
+      }, 'Upload');
+  }
+
+  async function removeAssignmentFile(a) {
+    if (!confirm('Remove the project file of “' + a.title + '”?\n\nNew buyers will no longer get it automatically. ' +
+      'Buyers who already received it keep their download links.')) return;
+    await Admin.api.del('/admin/assignment-files/' + a.id);
+    Admin.toast('Project file removed', 'ok');
+    load();
+  }
+
+  /* ======================= Buyer orders (one order at a time) ======================= */
+
+  function hasFulfilment(r) { return STATUSES.indexOf(r.orderStatus) >= 0; }
+  function isDelivered(r) { return !!r.delivery && r.orderStatus === 'DELIVERED'; }
+  function orderPath(r, action) {
+    return '/admin/assignment-orders/' + encodeURIComponent(r.orderCode) + '/' + action;
+  }
+
+  function drawOrders() {
+    renderTable(mount.querySelector('#ordersTable'), [
+      { label: 'Order', render: function (r) { return '<strong>' + esc(r.orderCode) + '</strong><div class="muted">' + Admin.date(r.createdAt) + '</div>'; } },
+      { label: 'Buyer', render: function (r) { return esc(r.customerName) + '<div class="muted">' + esc(r.email) + '</div>'; } },
+      { label: 'Assignment', render: function (r) { return esc(r.product || '—'); } },
+      { label: 'Amount', render: function (r) { return Admin.money(r.amount); } },
+      { label: 'Status', render: function (r) {
+          var d = r.delivery;
+          return Admin.statusBadge(r.orderStatus) + (d
+            ? '<div class="muted">' + esc(d.fileName) + ' · ' + Admin.bytes(d.sizeBytes) + '<br>Downloaded ' + times(d.downloadCount) + '</div>'
+            : ''); } }
+    ], orders, [
+      { label: function (r) { return isDelivered(r) ? 'Replace file' : 'Upload file'; }, className: 'btn-primary',
+        visible: function (r) { return r.canDeliver === true; }, onClick: uploadOrderFile },
+      { label: 'Resend link', visible: isDelivered, onClick: resendLink },
+      { label: 'Status', onClick: setStatus },
+      { label: 'View', onClick: viewOrder }
+    ], 'No paid assignment orders yet. They appear here as soon as someone buys an assignment.');
+  }
+
+  /* The fresh link is only ever returned once, so it is shown here for the admin to copy -
+     essential when SMTP is not configured and the email could not go out. */
+  function showLink(title, res) {
+    var sent = res.emailStatus === 'SENT';
+    Admin.openModal(title,
+      (sent
+        ? '<p>The download link was emailed to the buyer.</p>'
+        : '<p><strong>The email could not be sent</strong>' +
+          (res.emailFailureReason ? ': ' + esc(res.emailFailureReason) : '') +
+          '. Share the link below with the buyer yourself, or fix Email / SMTP Settings and use “Resend link”.</p>') +
+      '<div class="field"><label for="dlLink">Private download link</label>' +
+      '<input id="dlLink" type="text" readonly value="' + esc(res.downloadUrl) + '"></div>' +
+      '<p class="muted" style="font-size:12px">Works until ' + Admin.date(res.downloadExpiresAt) +
+      '. It is shown only now — “Resend link” creates a new one.</p>',
+      async function (m) {
+        var input = m.querySelector('#dlLink');
+        try { await navigator.clipboard.writeText(input.value); }
+        catch (e) { input.select(); document.execCommand('copy'); }
+        Admin.toast('Link copied', 'ok');
+      }, 'Copy link');
+  }
+
+  function uploadOrderFile(r) {
+    var replacing = isDelivered(r);
+    Admin.openModal((replacing ? 'Replace file for order ' : 'Upload file for order ') + r.orderCode,
+      '<div class="field"><label>Buyer</label><div>' + esc(r.customerName) + ' · ' + esc(r.email) + '</div></div>' +
+      '<div class="field"><label>Assignment</label><div>' + esc(r.product || '—') + '</div></div>' +
+      '<div class="field"><label for="ofFile">Project file *</label>' +
+        '<input id="ofFile" type="file" required accept="' + ACCEPT + '">' +
+        '<div class="muted" style="font-size:12px;margin-top:4px">' + esc(FILE_HINT) + '</div></div>' +
+      '<div class="field"><label for="ofNote">Note to the buyer</label>' +
+        '<textarea id="ofNote" maxlength="1000" placeholder="Optional — e.g. how to run the project">' +
+        esc(replacing ? (r.delivery.note || '') : '') + '</textarea></div>' +
+      '<p class="muted" style="font-size:12px">Only this buyer gets this file. The order is marked Delivered and ' +
+      'they are emailed a private download link.</p>',
+      async function (m, close) {
+        var file = m.querySelector('#ofFile').files[0];
+        if (!file) throw new Error('Choose the project file to upload.');
+        var fd = new FormData();
+        fd.append('file', file);
+        var note = m.querySelector('#ofNote').value.trim();
+        if (note) fd.append('note', note);
+        var btn = m.querySelector('button[type="submit"]');
+        btn.textContent = 'Uploading…';
+        try {
+          var res = await Admin.api.post(orderPath(r, 'deliver'), fd);
+          close();
+          load();
+          showLink('File sent — ' + r.orderCode, res);
+        } finally {
+          btn.textContent = 'Upload & send';
+        }
+      }, 'Upload & send');
+  }
+
+  async function resendLink(r) {
+    if (!confirm('Email ' + r.email + ' a new download link?\n\nThe current link stops working.')) return;
+    var res = await Admin.api.post(orderPath(r, 'resend-link'), {});
+    load();
+    showLink('New download link — ' + r.orderCode, res);
+  }
+
+  function setStatus(r) {
+    var current = hasFulfilment(r) ? r.orderStatus : 'IN_PROGRESS';
+    Admin.openModal('Order status — ' + r.orderCode,
+      '<div class="field"><label for="stSel">Status</label><select id="stSel">' +
+        STATUSES.map(function (s) {
+          return '<option value="' + s + '"' + (s === current ? ' selected' : '') + '>' + STATUS_LABEL[s] + '</option>';
+        }).join('') + '</select></div>' +
+      '<p class="muted" style="font-size:12px">For orders handled outside the website. ' +
+      'The buyer’s download link only works while the order is Delivered.</p>',
+      async function (m, close) {
+        await Admin.api.patch(orderPath(r, 'status'), { status: m.querySelector('#stSel').value });
+        Admin.toast('Status updated', 'ok');
+        close();
+        load();
+      }, 'Save');
+  }
+
+  function viewOrder(r) {
+    var d = r.delivery;
+    Admin.openModal('Order ' + r.orderCode,
+      '<div class="field"><label>Buyer</label><div>' + esc(r.customerName) + ' · ' + esc(r.email) + ' · ' + esc(r.phone || '—') + '</div></div>' +
+      '<div class="field"><label>Assignment</label><div>' + esc(r.product || '—') + '</div></div>' +
+      '<div class="field"><label>Amount</label><div>' + Admin.money(r.amount) + '</div></div>' +
+      '<div class="field"><label>Payment</label><div>' + Admin.statusBadge(r.paymentStatus) + '</div></div>' +
+      '<div class="field"><label>Status</label><div>' + Admin.statusBadge(r.orderStatus) + '</div></div>' +
+      '<div class="field"><label>Ordered</label><div>' + Admin.date(r.createdAt) + '</div></div>' +
+      (d
+        ? '<div class="field"><label>File sent</label><div>' + esc(d.fileName) + ' · ' + Admin.bytes(d.sizeBytes) + ' · ' + Admin.date(d.deliveredAt) + '</div></div>' +
+          (d.note ? '<div class="field"><label>Note to the buyer</label><div>' + esc(d.note) + '</div></div>' : '') +
+          '<div class="field"><label>Download link</label><div>Works until ' + Admin.date(d.downloadExpiresAt) +
+          ' · downloaded ' + times(d.downloadCount) +
+          (d.lastDownloadedAt ? ', last on ' + Admin.date(d.lastDownloadedAt) : '') + '</div></div>'
+        : ''),
+      function (m, close) { close(); }, 'Close');
+  }
+
+  /* ======================= Load ======================= */
+
+  async function load() {
+    var aHost = mount.querySelector('#assignmentsTable');
+    var oHost = mount.querySelector('#ordersTable');
+    if (!assignments.length) aHost.innerHTML = '<div class="empty">Loading…</div>';
+    if (!orders.length) oHost.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      var results = await Promise.all([Admin.api.get('/admin/assignment-files'), Admin.api.get('/admin/orders/assignments')]);
+      assignments = results[0] || [];
+      orders = results[1] || [];
+      drawAssignments();
+      drawOrders();
+    } catch (e) {
+      aHost.innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+      oHost.innerHTML = '';
+      Admin.toast(e.message, 'err');
+    }
+  }
+
+  mount.querySelector('#search').addEventListener('input', function (e) {
+    filter = e.target.value.trim().toLowerCase();
+    drawAssignments();
+  });
+  load();
+})();
+</script></body></html>

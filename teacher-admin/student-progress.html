@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>Student Progress — VITC Teacher Admin</title>
+<link rel="stylesheet" href="../admin/assets/admin.css">
+<link rel="stylesheet" href="assets/teacher.css?v=p5">
+<style>
+  .sp-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  .sp-bar select { padding:8px 10px; border:1px solid var(--line); border-radius:8px; font:inherit;
+    background:var(--surface); color:var(--text); min-width:220px; }
+  .sp-module { font-weight:700; font-size:13px; letter-spacing:.3px; color:var(--muted);
+    text-transform:uppercase; margin:18px 0 6px; }
+  .sp-module:first-child { margin-top:0; }
+  .sp-lesson { display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:10px 0; border-top:1px dashed var(--line); }
+  .sp-lesson:first-of-type, .sp-module + .sp-lesson { border-top:none; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <a class="t-skip-link" href="#mainContent">Skip to main content</a>
+  <aside class="sidebar" id="teacherSidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="burger" id="burger" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="teacherSidebar">☰</button>
+        <h1>Student Progress</h1>
+      </div>
+      <div class="who">
+        <span class="avatar" id="whoAvatar">V</span>
+        <span id="whoName">…</span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    <main class="content" id="mainContent" tabindex="-1">
+      <div class="card">
+        <div class="sp-bar">
+          <label for="courseSelect" style="font-weight:600;font-size:13px">Course:</label>
+          <select id="courseSelect"><option value="">Loading your courses…</option></select>
+          <label for="studentSelect" style="font-weight:600;font-size:13px">Student:</label>
+          <select id="studentSelect"><option value="">Select a course first</option></select>
+        </div>
+        <div id="progressSummary"></div>
+        <div id="progressList" aria-live="polite" aria-busy="true"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="assets/teacher.js?v=p5"></script>
+<script>
+(async function () {
+  if (!Teacher.requireAuth()) return;
+  Teacher.mountSidebar("progress");
+
+  var session = Teacher.getSession();
+  var displayName = session.fullName || session.username;
+  document.getElementById("whoName").textContent = displayName;
+  document.getElementById("whoAvatar").textContent = (displayName || "V").charAt(0).toUpperCase();
+  document.getElementById("logoutBtn").addEventListener("click", function () { Teacher.logout(); });
+
+  var params = new URLSearchParams(window.location.search);
+  var preselectCourseId = params.get("courseId");
+  var preselectStudentId = params.get("studentId");
+
+  var courseSelect = document.getElementById("courseSelect");
+  var studentSelect = document.getElementById("studentSelect");
+  var progressHost = document.getElementById("progressList");
+  var summaryHost = document.getElementById("progressSummary");
+
+  /* PART 3/8: overall completion summary derived from the same lesson list already returned by
+     GET /teacher/courses/{id}/students/{id}/progress - no new backend field. */
+  function renderSummary(lessons) {
+    if (!lessons || !lessons.length) { summaryHost.innerHTML = ""; return; }
+    var completed = lessons.filter(function (l) { return l.completed; }).length;
+    var pct = Math.round((completed / lessons.length) * 100);
+    summaryHost.innerHTML =
+      '<div class="sp-summary">' +
+        '<div class="sp-bar-outer"><div class="sp-bar-inner" style="width:' + pct + '%"></div></div>' +
+        '<span class="sp-summary-text">' + pct + '% complete · ' + completed + '/' + lessons.length + ' lessons</span>' +
+      '</div>';
+  }
+
+  function renderProgress(lessons) {
+    renderSummary(lessons);
+    if (!lessons || !lessons.length) {
+      Teacher.emptyState(progressHost, { icon: "\uD83C\uDF9E\uFE0F", title: "No lessons yet", message: "This course has no lessons yet." });
+      return;
+    }
+    var html = "";
+    var lastModule = null;
+    lessons.forEach(function (l) {
+      if (l.moduleTitle !== lastModule) {
+        html += '<div class="sp-module">' + Teacher.esc(l.moduleTitle) + '</div>';
+        lastModule = l.moduleTitle;
+      }
+      var badge = l.completed
+        ? '<span class="badge badge-ok">Completed</span>'
+        : '<span class="badge badge-muted">Not started</span>';
+      html += '<div class="sp-lesson"><span>' + Teacher.esc(l.lessonTitle) + '</span>' + badge + '</div>';
+    });
+    progressHost.removeAttribute("aria-busy");
+    progressHost.innerHTML = html;
+  }
+
+  function loadStudents(courseId, then) {
+    if (!courseId) return;
+    studentSelect.innerHTML = '<option value="">Loading…</option>';
+    return Teacher.api.get("/teacher/courses/" + encodeURIComponent(courseId) + "/students").then(function (students) {
+      if (!students || !students.length) {
+        studentSelect.innerHTML = '<option value="">No students enrolled</option>';
+        Teacher.emptyState(progressHost, { icon: "\uD83D\uDC65", title: "No students yet", message: "No students are enrolled in this course yet." });
+        return;
+      }
+      studentSelect.innerHTML = students.map(function (s) {
+        return '<option value="' + s.studentId + '">' + Teacher.esc(s.fullName || s.studentLoginId) + '</option>';
+      }).join("");
+      var initial = preselectStudentId && students.some(function (s) { return String(s.studentId) === preselectStudentId; })
+        ? preselectStudentId : String(students[0].studentId);
+      studentSelect.value = initial;
+      preselectStudentId = null; // only honor the deep link once
+      if (then) then(initial);
+    }).catch(function (e) {
+      studentSelect.innerHTML = '<option value="">Error</option>';
+      Teacher.emptyState(progressHost, { icon: "\u26A0\uFE0F", title: "Something went wrong", error: true, retry: true, message: e.message });
+      var btn = progressHost.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", function () { loadStudents(courseId, then); });
+    });
+  }
+
+  function loadProgress(courseId, studentId) {
+    if (!courseId || !studentId) return;
+    summaryHost.innerHTML = "";
+    Teacher.skeleton(progressHost, { count: 4 });
+    Teacher.api.get("/teacher/courses/" + encodeURIComponent(courseId) + "/students/" + encodeURIComponent(studentId) + "/progress")
+      .then(renderProgress)
+      .catch(function (e) {
+        summaryHost.innerHTML = "";
+        Teacher.emptyState(progressHost, { icon: "\u26A0\uFE0F", title: "Something went wrong", error: true, retry: true, message: e.message });
+        var btn = progressHost.querySelector("[data-retry]");
+        if (btn) btn.addEventListener("click", function () { loadProgress(courseId, studentId); });
+      });
+  }
+
+  function loadCourses() {
+    Teacher.skeleton(progressHost, { count: 4 });
+    Teacher.api.get("/teacher/courses").then(function (courses) {
+      if (!courses || !courses.length) {
+        courseSelect.innerHTML = '<option value="">No courses assigned</option>';
+        Teacher.emptyState(progressHost, { icon: "\uD83D\uDCDA", title: "No courses assigned yet", message: "Contact the Main Admin to get a course assigned to your account." });
+        return;
+      }
+      courseSelect.innerHTML = courses.map(function (c) {
+        return '<option value="' + c.id + '">' + Teacher.esc(c.title) + '</option>';
+      }).join("");
+      var initialCourse = preselectCourseId && courses.some(function (c) { return String(c.id) === preselectCourseId; })
+        ? preselectCourseId : String(courses[0].id);
+      courseSelect.value = initialCourse;
+      loadStudents(initialCourse, function (studentId) { loadProgress(initialCourse, studentId); });
+    }).catch(function (e) {
+      courseSelect.innerHTML = '<option value="">Error</option>';
+      Teacher.emptyState(progressHost, { icon: "\u26A0\uFE0F", title: "Something went wrong", error: true, retry: true, message: e.message });
+      var btn = progressHost.querySelector("[data-retry]");
+      if (btn) btn.addEventListener("click", loadCourses);
+    });
+  }
+  loadCourses();
+
+  courseSelect.addEventListener("change", function () {
+    loadStudents(courseSelect.value, function (studentId) { loadProgress(courseSelect.value, studentId); });
+  });
+  studentSelect.addEventListener("change", function () {
+    loadProgress(courseSelect.value, studentSelect.value);
+  });
+
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted && !Teacher.getSession()) {
+      window.location.href = "../teacher-login.html";
+    }
+  });
+})();
+</script>
+</body>
+</html>

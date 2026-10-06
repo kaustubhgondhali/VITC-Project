@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin Login — VITC</title>
+<link rel="stylesheet" href="assets/admin.css?v=p5">
+</head>
+<body>
+<div class="login-wrap">
+  <!-- ============ Sign in ============ -->
+  <form class="login-card" id="loginForm">
+    <div class="brand-badge"><span class="dot">V</span> VITC Admin</div>
+    <h1>Sign in</h1>
+    <p class="sub">Use your administrator credentials to manage the website.</p>
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input id="username" name="username" autocomplete="username" required placeholder="admin">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="pw-wrap">
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+        <button type="button" class="pw-toggle" data-target="password" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="submitBtn">Sign in</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" id="showForgot" style="color:var(--brand);font-weight:500">Forgot Password?</a>
+    </p>
+    <p class="muted mt-16" style="font-size:12.5px;margin-bottom:0">
+      Default credentials created on first backend start: <strong>admin / Admin@123</strong>
+    </p>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px"><a class="btn btn-sm" href="../index.html">← Back to Website</a></p>
+  </form>
+
+  <!-- ============ Forgot password — step 1: request OTP ============ -->
+  <form class="login-card" id="requestForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Admin</div>
+    <h1>Forgot password</h1>
+    <p class="sub">Enter your admin username, registered email, or phone to receive a 6-digit verification code.</p>
+
+    <div class="field">
+      <label for="account">Username, email, or phone</label>
+      <input id="account" required placeholder="admin or admin@vitc.in">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="requestBtn">Send OTP</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 2: verify OTP ============ -->
+  <form class="login-card" id="verifyOtpForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Admin</div>
+    <h1>Verify OTP</h1>
+    <p class="sub" id="verifyOtpSub">A 6-digit verification code has been sent. Enter the code below.</p>
+
+    <div class="field">
+      <label for="otpCode">6-Digit Verification Code</label>
+      <input id="otpCode" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" placeholder="123456" autocomplete="one-time-code">
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="verifyOtpBtn">Verify OTP</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:13px">
+      <a href="#" class="backToLogin">Back to Login</a>
+      <button type="button" class="btn btn-sm" id="resendOtpBtn" disabled>Resend OTP<span id="resendTimer"> (60s)</span></button>
+    </div>
+  </form>
+
+  <!-- ============ Forgot password — step 3: set new password ============ -->
+  <form class="login-card" id="resetPasswordForm" style="display:none">
+    <div class="brand-badge"><span class="dot">V</span> VITC Admin</div>
+    <h1>Set a new password</h1>
+    <p class="sub" id="resetSub">Choose a strong new password for your account.</p>
+
+    <div class="field">
+      <label for="newPassword">New password</label>
+      <div class="pw-wrap">
+        <input id="newPassword" type="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="newPassword" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="confirmPassword">Confirm new password</label>
+      <div class="pw-wrap">
+        <input id="confirmPassword" type="password" required minlength="8" placeholder="Repeat the password" autocomplete="new-password">
+        <button type="button" class="pw-toggle" data-target="confirmPassword" aria-label="Show password">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit" id="resetPasswordBtn">Reset password</button>
+    <p class="mt-16" style="text-align:center;margin-bottom:0;font-size:13px">
+      <a href="#" class="backToLogin">Back to Login</a>
+    </p>
+  </form>
+
+  <!-- ============ Forgot password — step 4: success ============ -->
+  <div class="login-card" id="resetSuccessCard" style="display:none;text-align:center">
+    <div class="brand-badge" style="justify-content:center"><span class="dot">✓</span> VITC Admin</div>
+    <h1 style="color:var(--ok,#1fbf75)">Password Reset</h1>
+    <p class="sub" style="margin-bottom:20px">Your password has been reset successfully. You can now sign in with your new credentials.</p>
+    <button class="btn btn-primary btn-block backToLogin" type="button">Back to Sign In</button>
+  </div>
+</div>
+<div id="toasts"></div>
+<script src="assets/admin.js?v=p8"></script>
+<script>
+  /* ---- Password visibility toggles ---- */
+  Array.prototype.forEach.call(document.querySelectorAll('.pw-toggle'), function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.getElementById(btn.getAttribute('data-target'));
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? 'Hide' : 'Show';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  });
+
+  /* ---- Card switching (login <-> forgot password wizard) ---- */
+  var cards = {
+    login: document.getElementById('loginForm'),
+    request: document.getElementById('requestForm'),
+    verify: document.getElementById('verifyOtpForm'),
+    reset: document.getElementById('resetPasswordForm'),
+    success: document.getElementById('resetSuccessCard')
+  };
+  function showCard(name) {
+    Object.keys(cards).forEach(function (k) {
+      if (cards[k]) cards[k].style.display = k === name ? '' : 'none';
+    });
+  }
+
+  var currentRecoveryToken = null;
+  var currentResetToken = null;
+  var resendInterval = null;
+
+  function stopResendTimer() {
+    if (resendInterval) {
+      clearInterval(resendInterval);
+      resendInterval = null;
+    }
+  }
+
+  function startResendTimer(seconds) {
+    stopResendTimer();
+    var remaining = typeof seconds === 'number' && seconds > 0 ? seconds : 60;
+    var btn = document.getElementById('resendOtpBtn');
+    var timerSpan = document.getElementById('resendTimer');
+    btn.disabled = true;
+    timerSpan.textContent = ' (' + remaining + 's)';
+    resendInterval = setInterval(function () {
+      remaining--;
+      if (remaining <= 0) {
+        stopResendTimer();
+        btn.disabled = false;
+        timerSpan.textContent = '';
+      } else {
+        timerSpan.textContent = ' (' + remaining + 's)';
+      }
+    }, 1000);
+  }
+
+  function resetRecoveryState() {
+    stopResendTimer();
+    currentRecoveryToken = null;
+    currentResetToken = null;
+    document.getElementById('requestForm').reset();
+    document.getElementById('verifyOtpForm').reset();
+    document.getElementById('resetPasswordForm').reset();
+  }
+
+  document.getElementById('showForgot').addEventListener('click', function (e) {
+    e.preventDefault();
+    resetRecoveryState();
+    showCard('request');
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.backToLogin'), function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      resetRecoveryState();
+      showCard('login');
+    });
+  });
+
+  /* Entering the admin area always shows this login form. Any session left
+     over in localStorage is discarded (and revoked on the server, best
+     effort) so the dashboard can only be reached by explicitly signing in.
+     Protected pages keep their own guard + backend token validation. */
+  (function () {
+    var s = Admin.getAdmin();
+    if (!s) { Admin.clearSession(); return; }
+    Admin.clearSession();
+    try {
+      fetch(Admin.api.base + '/api/v1/admins/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: s.username, token: s.sessionToken })
+      }).catch(function () {});
+    } catch (e) { /* best effort */ }
+  })();
+
+  /* ---- Sign in ---- */
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('submitBtn');
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    if (!username || !password) {
+      Admin.toast('Please enter your registered email/ID.', 'err');
+      return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+      var admin = await Admin.api.post('/admins/login', { username: username, password: password });
+      Admin.setAdmin(admin);              // throws if the API returned no session token
+      location.href = 'dashboard.html';
+    } catch (err) {
+      Admin.clearSession();
+      Admin.toast(err.message, 'err');
+      btn.disabled = false; btn.textContent = 'Sign in';
+    }
+  });
+
+  /* ---- Step 1: Request OTP ---- */
+  document.getElementById('requestForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var account = document.getElementById('account').value.trim();
+    if (!account) {
+      Admin.toast('Please enter your registered username, email, or phone.', 'err');
+      return;
+    }
+    var btn = document.getElementById('requestBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      var res = await Admin.api.post('/admins/forgot-password', {
+        usernameOrEmail: account
+      });
+      currentRecoveryToken = res.recoveryToken;
+      showCard('verify');
+      document.getElementById('otpCode').value = '';
+      document.getElementById('verifyOtpSub').textContent =
+        'A 6-digit verification code has been sent to ' + (res.targetMasked || 'your registered contact') +
+        '. It expires in ' + (res.expiresInMinutes || 5) + ' minutes.';
+      startResendTimer(res.cooldownSeconds || 60);
+      Admin.toast('Verification OTP sent.', 'ok');
+    } catch (err) {
+      Admin.toast(err.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send OTP';
+    }
+  });
+
+  /* ---- Step 2: Verify OTP ---- */
+  document.getElementById('verifyOtpForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var otp = document.getElementById('otpCode').value.trim();
+    if (!/^\d{6}$/.test(otp)) {
+      Admin.toast('Please enter a valid 6-digit numeric OTP.', 'err');
+      return;
+    }
+    if (!currentRecoveryToken) {
+      Admin.toast('Recovery session expired. Please request a new OTP.', 'err');
+      showCard('request');
+      return;
+    }
+    var btn = document.getElementById('verifyOtpBtn');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    try {
+      var res = await Admin.api.post('/admins/verify-otp', {
+        recoveryToken: currentRecoveryToken,
+        otp: otp
+      });
+      currentResetToken = res.resetToken;
+      stopResendTimer();
+      showCard('reset');
+      Admin.toast('OTP verified successfully.', 'ok');
+    } catch (err) {
+      Admin.toast(err.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Verify OTP';
+    }
+  });
+
+  /* ---- Step 2: Resend OTP ---- */
+  document.getElementById('resendOtpBtn').addEventListener('click', async function (e) {
+    e.preventDefault();
+    if (!currentRecoveryToken) {
+      Admin.toast('Please enter your account details first.', 'err');
+      showCard('request');
+      return;
+    }
+    var btn = document.getElementById('resendOtpBtn');
+    btn.disabled = true;
+    try {
+      var res = await Admin.api.post('/admins/resend-otp', {
+        recoveryToken: currentRecoveryToken
+      });
+      startResendTimer(res.cooldownSeconds || 60);
+      if (res.targetMasked) {
+        document.getElementById('verifyOtpSub').textContent =
+          'A 6-digit verification code has been sent to ' + res.targetMasked +
+          '. It expires in ' + (res.expiresInMinutes || 5) + ' minutes.';
+      }
+      Admin.toast('A new OTP has been sent.', 'ok');
+    } catch (err) {
+      Admin.toast(err.message, 'err');
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- Step 3: Set New Password ---- */
+  document.getElementById('resetPasswordForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (!currentResetToken) {
+      Admin.toast('Please verify your OTP first.', 'err');
+      showCard('request');
+      return;
+    }
+    var pw = document.getElementById('newPassword').value;
+    var confirm = document.getElementById('confirmPassword').value;
+    if (!pw || pw.length < 8) {
+      Admin.toast('Password must be at least 8 characters.', 'err');
+      return;
+    }
+    if (pw !== confirm) {
+      Admin.toast('Passwords do not match.', 'err');
+      return;
+    }
+    var btn = document.getElementById('resetPasswordBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await Admin.api.post('/admins/reset-password', {
+        resetToken: currentResetToken,
+        newPassword: pw,
+        confirmPassword: confirm
+      });
+      Admin.clearSession();
+      showCard('success');
+      Admin.toast('Your password has been reset successfully.', 'ok');
+    } catch (err) {
+      Admin.toast(err.message, 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Reset password';
+    }
+  });
+</script>
+</body>
+</html>
